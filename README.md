@@ -1,123 +1,110 @@
-# NeuroTriq - Full Stack Rebuild
+# NeuroTriQ Company Website
 
-This repository contains the frontend (Vite + React + Tailwind) and a simple backend (Node.js + Express + MongoDB) for handling contact form submissions and an admin dashboard.
+Modern company website for NeuroTriQ with a React + Vite + TypeScript frontend and a lightweight Node.js + Express backend powered by SQLite. The backend stores contact form submissions and can notify via email (SMTP).
+
+## Tech stack
+
+- Frontend: Vite, React 18, TypeScript, Tailwind CSS, shadcn/ui, Radix UI
+- Backend: Node.js, Express, better-sqlite3, Nodemailer, CORS, dotenv
+
+## Repository layout
+
+```
+neurotriq-innovate-build-main/
+├─ src/                 # React app source
+├─ public/              # Static assets
+├─ backend/             # Express + SQLite API for contact form
+├─ scripts/             # Utility scripts for serving dist
+├─ package.json         # Frontend scripts and deps
+└─ backend/package.json # Backend scripts and deps
+```
+
+## Prerequisites
+
+- Node.js 18+ and npm
 
 ## Setup (Windows PowerShell)
 
-1. Install dependencies for frontend
+1) Install frontend dependencies
 
 ```powershell
-# from project root (frontend is the current folder)
 cd neurotriq-innovate-build-main
 npm install
 ```
 
-2. Install dependencies for backend
+2) Install backend dependencies
 
 ```powershell
 cd backend
 npm install
 ```
 
-3. Create environment files
+3) Environment configuration
 
-- Backend: copy `backend/.env.example` to `backend/.env` and fill values.
-- Frontend: create `.env` in the frontend root with `VITE_API_URL` (example below).
-
-Example frontend `.env` (frontend root):
+- Frontend (root): create `.env`
 
 ```env
 VITE_API_URL=http://localhost:5000
 ```
 
-4. Run backend
+- Backend (`backend/.env`):
+
+```env
+PORT=5000
+CLIENT_URL=http://localhost:5173
+
+# SMTP (optional, for email notifications)
+EMAIL_HOST=smtp.example.com
+EMAIL_PORT=587
+EMAIL_SECURE=false
+EMAIL_USER=your_user
+EMAIL_PASS=your_password
+EMAIL_FROM="NeuroTriQ <no-reply@neurotriq.co.ke>"
+CONTACT_EMAIL=info@neurotriq.co.ke
+```
+
+Note: `.env` files and the local SQLite DB are git-ignored.
+
+4) Run the backend API
 
 ```powershell
 cd backend
 npm run dev
 ```
 
-5. Run frontend
+5) Run the frontend
 
 ```powershell
-# from frontend root
+# from the project root
 npm run dev
 ```
 
-6. Deploy
+The app will open on http://localhost:5173 (Vite). The API listens on http://localhost:5000 by default.
 
-- Frontend: can be deployed to Vercel (build command: `npm run build`, output: `dist`).
-- Backend: can be deployed to Render or any Node host. Set environment variables from `backend/.env.example` in your host.
-# Welcome to your Lovable project
+## Build and preview (frontend)
 
-## Project info
-
-**URL**: https://lovable.dev/projects/37f9e3f0-aef0-4a02-b98e-185b92576380
-
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/37f9e3f0-aef0-4a02-b98e-185b92576380) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```powershell
+npm run build
+npm run preview
 ```
 
-**Edit a file directly in GitHub**
+## API overview
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- POST `/api/contact` – stores a contact submission and optionally sends an email (when SMTP is configured)
+- GET `/api/admin/contacts` – lists stored contacts (basic admin listing)
+- GET `/api/health` – health check
 
-**Use GitHub Codespaces**
+Database: `backend/database.sqlite` (auto-created on first run via better-sqlite3).
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Deployment notes
 
-## What technologies are used for this project?
+- Frontend: deploy the `dist` folder (e.g., Vercel, Netlify, static hosting)
+- Backend: deploy as a Node app (e.g., Render, Railway, VPS). Set environment variables from `backend/.env` in your host.
 
-This project is built with:
+## Contributing
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Pull requests are welcome. For major changes, please open an issue first to discuss what you’d like to change.
 
-## How can I deploy this project?
+## License
 
-Simply open [Lovable](https://lovable.dev/projects/37f9e3f0-aef0-4a02-b98e-185b92576380) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Proprietary – All rights reserved by NeuroTriQ.
