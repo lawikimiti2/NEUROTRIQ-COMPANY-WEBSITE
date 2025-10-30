@@ -1,0 +1,42 @@
+/* Subtle 3D blue mesh wireframe background for the Portfolio page */
+.portfolio-mesh-page { position: relative; }
+
+.portfolio-mesh-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none; /* ensure background doesn't block interactions */
+  z-index: 0;
+  overflow: hidden;
+}
+
+/* The wireframe grid plane with perspective */
+.portfolio-mesh-plane {
+  position: absolute;
+  left: -20%;
+  right: -20%;
+  top: 0;
+  bottom: -15%;
+  height: 110%;
+  background-image:
+    repeating-linear-gradient(to right, rgba(59, 130, 246, 0.22) 0 1px, transparent 1px 40px),
+    repeating-linear-gradient(to top, rgba(59, 130, 246, 0.22) 0 1px, transparent 1px 40px);
+  /* blue hue lines; adjust spacing via the 40px value */
+  transform-origin: bottom center;
+  transform: perspective(900px) rotateX(58deg) translateY(0);
+  opacity: 0.6;
+  filter: drop-shadow(0 10px 30px rgba(30, 64, 175, 0.25));
+  /* fade edges for a more natural look */
+  -webkit-mask-image: radial-gradient(120% 80% at 50% 60%, rgba(0,0,0,0.95), rgba(0,0,0,0) 70%);
+          mask-image: radial-gradient(120% 80% at 50% 60%, rgba(0,0,0,0.95), rgba(0,0,0,0) 70%);
+  animation: portfolio-mesh-drift 42s linear infinite;
+}
+
+@keyframes portfolio-mesh-drift {
+  0% { background-position: 0 0, 0 0; }
+  100% { background-position: 200px 0, 0 200px; }
+}
+
+/* Respect user motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .portfolio-mesh-plane { animation: none; }
+}

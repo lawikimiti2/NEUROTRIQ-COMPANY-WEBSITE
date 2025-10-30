@@ -1,0 +1,220 @@
+.techcube-section {
+  perspective: 1600px;
+  padding: 12px 0 0;
+}
+
+.section-title h3 {
+  color: var(--muted-foreground, #94a3b8);
+}
+
+.techcube-box {
+  --cube-size: 300px; /* default face size */
+  width: calc(var(--cube-size) + 40px);
+  height: calc(var(--cube-size) + 40px);
+  margin: 0 auto;
+  border-radius: 16px;
+  padding: 20px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(2,6,23,0.02));
+  box-shadow: 0 18px 50px rgba(2,6,23,0.12), inset 0 1px 0 rgba(255,255,255,0.02);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cube-viewport {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.cube {
+  width: var(--cube-size);
+  height: var(--cube-size);
+  position: relative;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  transition: transform 0.9s cubic-bezier(.2,.9,.2,1);
+  will-change: transform;
+}
+
+.cube-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  box-shadow: 0 6px 24px rgba(2,6,23,0.12);
+  will-change: transform, opacity;
+}
+
+.cube-face .face-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  transition: transform 350ms ease, box-shadow 350ms ease;
+}
+
+.face-overlay {
+  width: 100%;
+  padding: 18px;
+  background: linear-gradient(180deg, rgba(2,6,23,0) 0%, rgba(2,6,23,0.6) 100%);
+  color: white;
+}
+
+/* position each face in 3D */
+.cube-face.face-0 { transform: translateZ(calc(var(--cube-size) / 2)); }
+.cube-face.face-1 { transform: rotateY(90deg) translateZ(calc(var(--cube-size) / 2)); }
+.cube-face.face-2 { transform: rotateY(180deg) translateZ(calc(var(--cube-size) / 2)); }
+.cube-face.face-3 { transform: rotateY(-90deg) translateZ(calc(var(--cube-size) / 2)); }
+.cube-face.face-4 { transform: rotateX(90deg) translateZ(calc(var(--cube-size) / 2)); }
+.cube-face.face-5 { transform: rotateX(-90deg) translateZ(calc(var(--cube-size) / 2)); }
+
+/* soft shadow under cube */
+.cube-shadow {
+  width: calc(var(--cube-size) / 1.8);
+  height: 18px;
+  background: radial-gradient(closest-side, rgba(2,6,23,0.25), rgba(2,6,23,0.04));
+  border-radius: 50%;
+  margin: 14px auto 0;
+  filter: blur(8px);
+}
+
+/* continuous gentle rotation on two axes */
+@keyframes tc-rotate {
+  0%   { transform: rotateY(0deg) rotateX(0deg); }
+  100% { transform: rotateY(-360deg) rotateX(360deg); }
+}
+
+.cube.auto-rotate { animation: tc-rotate var(--rotate-duration, 12000ms) linear infinite; }
+
+.cube-controls { display:flex; gap:10px; justify-content:center; margin-top:18px; }
+.tc-dot { width:10px; height:10px; border-radius:9999px; background:#CBD5E1; border:none; }
+.tc-dot.active { background: var(--primary, #0ea5a4); transform: scale(1.1); }
+
+/* pause when user hovers */
+.techcube-section:hover .cube.auto-rotate,
+.techcube-section:focus-within .cube.auto-rotate { animation-play-state: paused; }
+
+/* cards row (horizontal scroll) shown during exploded/cards phase */
+.cards-row-wrapper {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none; /* let inner elements opt-in */
+}
+.cards-row-wrapper .cards-row {
+  pointer-events: auto;
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding: 12px 28px;
+  scrollbar-width: thin;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  box-sizing: border-box;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+.cards-row-wrapper .card {
+  flex: 0 0 300px;
+  scroll-snap-align: center;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(2,6,23,0.04));
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(2,6,23,0.12);
+  display: flex;
+  flex-direction: column;
+  min-height: 190px;
+  transition: transform 320ms cubic-bezier(.2,.9,.2,1), box-shadow 320ms ease, opacity 240ms ease;
+}
+.cards-row-wrapper .card:focus,
+.cards-row-wrapper .card:hover { transform: translateY(-6px) scale(1.02); box-shadow: 0 18px 40px rgba(2,6,23,0.18); }
+.card-media {
+  height: 140px;
+  background-size: cover;
+  background-position: center;
+}
+.card-body { padding: 12px 14px; }
+.card-title { font-weight: 600; margin-bottom: 6px; }
+.card-tagline { font-size: 0.92rem; color: var(--muted-foreground, #94a3b8); }
+
+/* scroll buttons */
+.cards-row-wrapper .cards-scroll-btn {
+  pointer-events: auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  border: none;
+  background: rgba(2,6,23,0.6);
+  color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 8px;
+  cursor: pointer;
+}
+.cards-row-wrapper .cards-scroll-btn.left { margin-left: 6px; }
+.cards-row-wrapper .cards-scroll-btn.right { margin-right: 6px; }
+
+/* hide native scrollbar on Webkit while preserving scrolling */
+.cards-row-wrapper .cards-row::-webkit-scrollbar { height: 10px; }
+.cards-row-wrapper .cards-row::-webkit-scrollbar-thumb { background: rgba(2,6,23,0.18); border-radius: 999px; }
+
+/* responsive: make cards narrower on small screens and allow vertical stacking */
+@media (max-width: 640px) {
+  .cards-row-wrapper { align-items: flex-start; padding-top: 12px; }
+  .cards-row-wrapper .card { flex: 0 0 86vw; min-height: 160px; }
+  .cards-row-wrapper .cards-scroll-btn { display: none; }
+}
+
+/* card phase hover tilt/scale on inner content only */
+.cube[data-phase="cards"] .cube-face .face-inner:hover {
+  transform: translateZ(10px) scale(1.04) rotateX(4deg) rotateY(6deg);
+  box-shadow: 0 18px 40px rgba(2,6,23,0.18);
+}
+
+/* when in cards phase, slightly lift faces for clarity */
+.cube[data-phase="cards"] .cube-face { transition: transform 800ms cubic-bezier(.2,.9,.2,1), opacity 400ms ease; }
+
+/* responsive sizing */
+@media (min-width: 768px) {
+  .techcube-box { --cube-size: 420px; width: calc(var(--cube-size) + 40px); height: calc(var(--cube-size) + 40px); }
+}
+
+@media (max-width: 640px) {
+  .techcube-box { --cube-size: 260px; }
+  /* stack cards vertically on small screens when in cards phase */
+  .cube[data-phase="cards"] {
+    transform: none !important;
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .cube[data-phase="cards"] .cube-face {
+    position: relative;
+    width: 90vw;
+    height: calc(90vw * 0.6);
+    margin: 10px auto;
+    transform: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cube.auto-rotate { animation: none; transform: rotateY(0deg) rotateX(0deg); }
+}

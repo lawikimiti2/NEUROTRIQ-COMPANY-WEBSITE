@@ -1,0 +1,44 @@
+/* 3D tab cards for Partners page */
+.tabs-3d-container {
+  perspective: 1200px;
+}
+
+/* Base card look */
+button[role="tab"] .tab-card {
+  min-width: 220px;
+  height: 130px;
+  border-radius: 14px;
+  background: var(--background);
+  border: 1px solid var(--border);
+  box-shadow: 0 6px 18px rgba(2,6,23,0.08);
+  transition: transform 300ms cubic-bezier(.2,.9,.2,1), box-shadow 300ms ease;
+  transform-style: preserve-3d;
+  will-change: transform, box-shadow;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+}
+
+/* Hover/active elevation + subtle tilt */
+button[role="tab"]:hover .tab-card,
+button[role="tab"][data-state="active"] .tab-card {
+  transform: translateY(-6px) rotateX(3deg) rotateY(4deg) scale(1.015);
+  box-shadow: 0 14px 34px rgba(2,6,23,0.18);
+}
+
+/* Content arrangement */
+.tab-card-inner {
+  text-align: center;
+}
+.tab-card-logo {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 8px auto;
+  display: block;
+  object-fit: contain;
+}
+.tab-card-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
