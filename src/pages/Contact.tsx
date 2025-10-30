@@ -68,7 +68,11 @@ const Contact = () => {
     // POST to backend API
     (async () => {
       try {
-        const apiBase = import.meta.env.VITE_API_URL || "";
+        let apiBase: string = import.meta.env.VITE_API_URL || "";
+        // If site is on HTTPS but API base is HTTP, upgrade to HTTPS to avoid mixed content
+        if (typeof window !== 'undefined' && window.location.protocol === 'https:' && apiBase.startsWith('http://')) {
+          apiBase = apiBase.replace('http://', 'https://');
+        }
         const res = await fetch(`${apiBase}/api/contact`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },

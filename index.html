@@ -12,6 +12,11 @@
     <link rel="alternate icon" href="/favicon.ico" />
     <meta name="theme-color" content="#0A3D62" />
 
+  <!-- Security: prefer HTTPS and reduce data leakage -->
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=(), interest-cohort=()">
+
     
     
   <meta property="og:type" content="website" />
