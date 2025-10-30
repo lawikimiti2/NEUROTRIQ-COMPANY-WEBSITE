@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import "./TechCube.css";
 import { categoryImages } from "@/lib/categoryImages";
+import { Link } from "react-router-dom";
 
 type Face = {
   key: string;
@@ -241,9 +242,9 @@ const TechCube: React.FC = () => {
       </div>
 
       <div className="text-center mt-6">
-        <a href="/services" className="inline-flex items-center px-5 py-2 rounded-md bg-primary text-white font-medium shadow-sm hover:opacity-95" aria-label="Explore Services">
+        <Link to="/services" className="inline-flex items-center px-5 py-2 rounded-md bg-primary text-white font-medium shadow-sm hover:opacity-95" aria-label="Explore Services">
           Explore More
-        </a>
+        </Link>
       </div>
 
       {modalOpen && modalIndex != null && createPortal(
