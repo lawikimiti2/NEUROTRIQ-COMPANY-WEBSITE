@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +29,7 @@ import {
 
 const Contact = () => {
   const { toast } = useToast();
+  const location = useLocation();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -44,6 +46,22 @@ const Contact = () => {
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  // Prefill message when arriving with ?project=... in the URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const project = params.get("project");
+    if (project) {
+      setFormData(prev => ({
+        ...prev,
+        message: prev.message && prev.message.trim().length > 0
+          ? prev.message
+          : `I'm interested in this project: ${project}. Please contact me with more details.`
+      }));
+    }
+  // run on first mount only for prefill
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/ui/footer";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { 
   Building, 
   Shield, 
@@ -172,11 +172,14 @@ const Portfolio = () => {
                           </div>
                         </CardHeader>
                         <CardContent>
-                          <Button variant="ghost" className="p-0 h-auto font-medium text-primary hover:text-primary-dark">
-                            <a href={`/portfolio/${encodeURIComponent(project.category)}`} className="inline-flex items-center">
-                      View Case Study
-                      <ExternalLink className="ml-2 h-4 w-4" />
-                     </a>
+                          <Button asChild variant="ghost" className="p-0 h-auto font-medium text-primary hover:text-primary-dark">
+                            <Link
+                              to={`/contact?project=${encodeURIComponent(project.title)}`}
+                              aria-label={`Inquire about ${project.title}`}
+                            >
+                              Inquire about this project
+                              <ExternalLink className="ml-2 h-4 w-4" />
+                            </Link>
                           </Button>
                         </CardContent>
                       </Card>
@@ -316,9 +319,11 @@ const Portfolio = () => {
             Join our growing list of satisfied clients and transform your technology infrastructure.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="secondary" className="text-lg px-8 py-4">
-              Discuss Your Project
-              <ArrowRight className="ml-2 h-5 w-5" />
+            <Button asChild size="lg" variant="secondary" className="text-lg px-8 py-4">
+              <Link to="/contact">
+                Discuss Your Project
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
             </Button>
             <Button size="lg" variant="outline" className="text-lg px-8 py-4 border-white text-white hover:bg-white hover:text-foreground">
               Download Portfolio
