@@ -131,7 +131,7 @@ const Home = () => {
                 </Button>
               </a>
               <Link to="/contact">
-                <Button variant="outline" size="lg" className="text-lg px-8 py-4 border-white text-white hover:bg-white hover:text-foreground">
+                <Button variant="outline" size="lg" className="text-lg px-8 py-4 bg-transparent border-white text-white hover:bg-white hover:text-foreground">
                   Get Free Consultation
                 </Button>
               </Link>
@@ -439,7 +439,7 @@ const Home = () => {
               </Button>
             </Link>
             <a href="tel:+254795344905">
-              <Button size="lg" variant="outline" className="text-lg px-8 py-4 border-white text-white hover:bg-white hover:text-foreground">
+              <Button size="lg" variant="outline" className="text-lg px-8 py-4 bg-transparent border-white text-white hover:bg-white hover:text-foreground">
                 Schedule Consultation
               </Button>
             </a>

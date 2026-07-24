@@ -26,6 +26,12 @@ db.prepare(`
   )
 `).run();
 
+// Migration: add isRead column for existing databases created before this field existed
+const contactColumns = db.prepare("PRAGMA table_info(contacts)").all();
+if (!contactColumns.some((c) => c.name === "isRead")) {
+  db.prepare("ALTER TABLE contacts ADD COLUMN isRead INTEGER DEFAULT 0").run();
+}
+
 // Create admin users table for the admin dashboard
 db.prepare(`
   CREATE TABLE IF NOT EXISTS admin_users (

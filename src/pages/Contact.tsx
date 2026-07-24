@@ -17,6 +17,7 @@ import {
   Mail, 
   Clock,
   Send,
+  Loader2,
   CheckCircle,
   MessageSquare,
   Calendar,
@@ -42,6 +43,7 @@ const Contact = () => {
     message: "",
     newsletter: false
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -67,6 +69,7 @@ const Contact = () => {
     e.preventDefault();
     // POST to backend API
     (async () => {
+      setIsSubmitting(true);
       try {
         let apiBase: string = import.meta.env.VITE_API_URL || "";
         // If site is on HTTPS but API base is HTTP, upgrade to HTTPS to avoid mixed content
@@ -106,6 +109,8 @@ const Contact = () => {
           description: "There was an error sending your message. Please try again later.",
           variant: "destructive"
         });
+      } finally {
+        setIsSubmitting(false);
       }
     })();
   };
@@ -332,9 +337,13 @@ const Contact = () => {
                       </Label>
                     </div>
 
-                    <Button type="submit" size="lg" className="btn-tech w-full">
-                      <Send className="mr-2 h-5 w-5" />
-                      Send Message
+                    <Button type="submit" size="lg" className="btn-tech w-full" disabled={isSubmitting}>
+                      {isSubmitting ? (
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      ) : (
+                        <Send className="mr-2 h-5 w-5" />
+                      )}
+                      {isSubmitting ? "Sending..." : "Send Message"}
                     </Button>
                   </form>
                 </CardContent>
@@ -481,7 +490,7 @@ const Contact = () => {
               </Button>
             </a>
             <a href="mailto:info@neurotriq.co.ke">
-              <Button size="lg" variant="outline" className="text-lg px-8 py-4 border-white text-white hover:bg-white hover:text-foreground">
+              <Button size="lg" variant="outline" className="text-lg px-8 py-4 bg-transparent border-white text-white hover:bg-white hover:text-foreground">
                 <MessageSquare className="mr-2 h-5 w-5" />
                 Email Support
               </Button>

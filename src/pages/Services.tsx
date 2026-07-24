@@ -493,7 +493,7 @@ const Services = () => {
               </Button>
             </a>
             <a href="mailto:info@neurotriq.co.ke">
-              <Button size="lg" variant="outline" className="text-lg px-8 py-4 border-white text-white hover:bg-white hover:text-foreground">
+              <Button size="lg" variant="outline" className="text-lg px-8 py-4 bg-transparent border-white text-white hover:bg-white hover:text-foreground">
                 <Mail className="mr-2 h-5 w-5" />
                 Email Consultation
               </Button>
