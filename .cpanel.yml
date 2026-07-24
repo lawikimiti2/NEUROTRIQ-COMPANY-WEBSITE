@@ -12,26 +12,29 @@
 # If you ever recreate the Node.js app or change its Node version, update the
 # "22" in the nodevenv paths below to match the new activation line cPanel shows.
 #
+# The frontend is pre-built locally (npm run build, with VITE_API_URL set to
+# the production API URL) and its dist/ output is committed to the repo, so
+# this deployment only copies files instead of running npm ci + vite build on
+# the server — much faster and avoids long-running installs on shared hosting.
+# After any frontend change: run `VITE_API_URL=https://api.neurotriq.co.ke npm
+# run build`, commit the updated dist/, then push before deploying.
+#
 # Every line under `tasks` runs as its own separate shell — chain related
 # commands with && on one line if they need to share a cwd or sourced env.
 
 ---
 deployment:
   tasks:
-    # 1) Build the frontend (static React app) using the Node runtime from the
-    #    backend's virtual environment, with the production API URL baked in.
+    # 1) Publish the pre-built frontend to public_html.
     - export DEPLOYPATH=/home/neurotri/public_html/
-    - source /home/neurotri/nodevenv/neurotriq-backend/22/bin/activate && cd /home/neurotri/repositories/NEUROTRIQ-COMPANY-WEBSITE && export VITE_API_URL=https://api.neurotriq.co.ke && npm ci && npm run build && deactivate
-
-    # 2) Publish the built frontend to public_html.
     - /bin/cp -R /home/neurotri/repositories/NEUROTRIQ-COMPANY-WEBSITE/dist/. $DEPLOYPATH
 
-    # 3) Install backend production dependencies straight into the Node app's
+    # 2) Install backend production dependencies straight into the Node app's
     #    application root (kept separate from the git checkout).
     - /bin/mkdir -p /home/neurotri/neurotriq-backend
     - /bin/cp -R /home/neurotri/repositories/NEUROTRIQ-COMPANY-WEBSITE/backend/. /home/neurotri/neurotriq-backend
     - source /home/neurotri/nodevenv/neurotriq-backend/22/bin/activate && cd /home/neurotri/neurotriq-backend && npm ci --omit=dev && deactivate
 
-    # 4) Restart the Node app (Passenger watches this file for changes).
+    # 3) Restart the Node app (Passenger watches this file for changes).
     - /bin/mkdir -p /home/neurotri/neurotriq-backend/tmp
     - /bin/touch /home/neurotri/neurotriq-backend/tmp/restart.txt
