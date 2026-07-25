@@ -1,4 +1,4 @@
-import Database from "better-sqlite3";
+import { DatabaseSync } from "node:sqlite";
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Database will be created in the backend folder
-const db = new Database(join(__dirname, "database.sqlite"));
+const db = new DatabaseSync(join(__dirname, "database.sqlite"));
 
 // Create contacts table for storing contact form submissions
 db.prepare(`

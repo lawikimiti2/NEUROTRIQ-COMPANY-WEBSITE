@@ -4,42 +4,38 @@ Purpose: help an AI contributor be productive immediately by knowing the archite
 
 ### Architecture and data flow
 - Frontend: Vite + React + TypeScript + Tailwind + shadcn-ui in `src/` with React Router v6. Query client is prewired in `src/App.tsx`. Alias `@` -> `./src` (see `tsconfig.json`, `vite.config.ts`).
-- Backend: Node + Express served from `backend/server.js`. Uses SQLite via `better-sqlite3` (`backend/database.js` auto-creates tables). No ORM.
+- Backend: Node + Express served from `backend/server.js`. Uses SQLite via Node's built-in `node:sqlite` (`DatabaseSync`, Node 22.5+) — `backend/database.js` auto-creates tables and runs simple column migrations via `PRAGMA table_info`. No ORM, no native/compiled dependencies.
 - Primary flow: `src/pages/Contact.tsx` POSTs to `${VITE_API_URL}/api/contact` → `backend/server.js` validates, inserts into `contacts` table, optionally sends email via Nodemailer, then returns the created record.
-- Admin data: server exposes `GET /api/admin/contacts` returning all contacts (no auth). Legacy Mongo/Mongoose-based routes exist in `backend/routes/*` and `backend/models/*` but are not mounted by `server.js`.
+- Admin flow: `src/pages/AdminLogin.tsx` POSTs to `/api/admin/login` (checks `ADMIN_EMAIL`/`ADMIN_PASS` env vars, returns a JWT signed with `JWT_SECRET`). `src/pages/AdminDashboard.tsx` calls `GET /api/admin/messages` with `Authorization: Bearer <token>`, renders a clickable table, marks messages read via `PATCH /api/admin/messages/:id/read`, and can export all messages as a letterhead-branded PDF/Excel via `GET /api/admin/messages/export/{pdf,excel}` (both JWT-protected). A separate `GET /api/admin/contacts` exists for script/integration use, protected by a static `Authorization: Bearer <ADMIN_TOKEN>` check instead of JWT.
+- There is no Mongo/Mongoose anywhere in this repo — an earlier, never-mounted Mongo-based admin implementation was deleted. Don't reintroduce it.
 
 ### Dev, build, and serve
 - Frontend
-  - Dev: `npm run dev` (Vite on 0.0.0.0:5173). Configure `VITE_API_URL` in a frontend `.env` (example: `http://localhost:5000`).
-  - Build: `npm run build` → static files in `dist/`. Preview: `npm run preview` or `node scripts/serve-dist-local.js`.
+  - Dev: `npm run dev` (Vite on 0.0.0.0:5173). Configure `VITE_API_URL` in a root `.env` (local dev example: `http://localhost:5001`; production: `https://api.neurotriq.co.ke`).
+  - Build: `npm run build` → static files in `dist/`. **`dist/` is committed to git** (not gitignored) so cPanel deployment can just copy it instead of building on the server — see Deployment section below. After any frontend change, rebuild with the production API URL and commit the result: `VITE_API_URL=https://api.neurotriq.co.ke npm run build && git add dist`.
 - Backend
-  - Install: `cd backend && npm i`. Run: `npm run dev` (nodemon) or `npm start`.
-  - Env: copy `backend/.env.example` → `.env`. Note: `MONGO_URI` is unused by current SQLite implementation; `CLIENT_URL` controls CORS; email vars enable SMTP. `PORT` defaults to 5000.
+  - Install: `cd backend && npm i`. Run: `npm run dev` (nodemon) or `npm start` (`node server.js`).
+  - Env: `backend/.env` (gitignored; copy from `backend/.env.example`) is loaded via an explicit path in `server.js` (`dotenv.config({ path: join(__dirname, ".env") })`), so it loads correctly regardless of the process's current working directory. Required for admin auth: `ADMIN_EMAIL`, `ADMIN_PASS`, `JWT_SECRET`. Also: `ADMIN_TOKEN` (static-token admin route), `CLIENT_URL` (CORS), `EMAIL_*` (SMTP), `CONTACT_EMAIL`.
   - Health check: `GET /api/health` → `{ ok: true }`.
 
 ### Conventions and patterns
 - Routing: pages live in `src/pages/*` and are attached in `src/App.tsx`. Add new routes there; keep catch-all `*` last.
 - UI system: shadcn components under `src/components/ui/*`. Prefer composing from these; keep styling via Tailwind. Reuse existing patterns in `Contact.tsx` and `Admin*` pages.
-- Data fetching: react-query is available; new API reads/writes should ideally use it instead of ad-hoc `fetch` where feasible.
-- API shape: contacts table fields are defined in `backend/database.js`. When adding fields, update: DB schema, `server.js` insert/select, and the frontend form/state in `Contact.tsx`.
+- API shape: contacts table fields are defined in `backend/database.js`. When adding fields, update: DB schema (with a `PRAGMA table_info` migration guard for existing databases, matching the `isRead` column pattern), `server.js` insert/select, and the frontend form/state in `Contact.tsx`.
 - Error handling: backend returns `{ error: string }` with proper HTTP codes; frontend shows toasts via `use-toast`.
+- SQL: always use `db.prepare(sql).run/get/all(...)` (parameterized), never string-interpolate values into SQL.
 
-### Important integration notes (gotchas)
-- Admin feature mismatch:
-  - Frontend expects `POST /api/admin/login` (JWT) and `GET /api/admin/messages` with `Authorization: Bearer <token>` (see `src/pages/AdminLogin.tsx`, `AdminDashboard.tsx`).
-  - Backend currently exposes `GET /api/admin/contacts` with no auth and does not mount `backend/routes/admin.js`.
-  - To enable auth-backed admin, either: (A) mount the admin router in `server.js` and ensure `JWT_SECRET`, `ADMIN_*` are set; or (B) update the frontend to call `/api/admin/contacts` and remove token usage. Pick one and keep both sides consistent.
-- CORS: `server.js` uses `cors({ origin: process.env.CLIENT_URL || true })`. Set `CLIENT_URL` in backend `.env` during local dev to match Vite origin (e.g., `http://localhost:5173`).
-- Email: if SMTP env vars aren’t set, mail is skipped and the email content is logged for preview. This is expected in dev.
-- Paths: use `@/` alias for imports; avoid relative import chains.
+### Deployment (cPanel + Git Version Control)
+- Production host is cPanel with Git Version Control pulling from GitHub, deployment automated via `.cpanel.yml` at repo root (see its inline comments for the account-specific paths already filled in: cPanel user, repo path, Node app root, Node version).
+- Frontend: `.cpanel.yml` just copies the pre-built, committed `dist/` into `public_html` — it does **not** run `npm ci`/`npm run build` on the server (that was too slow/fragile on shared hosting and caused a deploy to need cancelling). If you change frontend code without rebuilding `dist/` first, the deployed site will be stale.
+- Backend: `.cpanel.yml` copies `backend/` into the Node app's application root and runs `npm ci --omit=dev` there, then touches `tmp/restart.txt` to restart Passenger. This is safe now that there are no native/compiled dependencies (the `better-sqlite3` → `node:sqlite` migration removed the only one, which was also a likely cause of a "Web application could not be started" Passenger crash from a native binary built for the wrong platform).
+- The backend Node app is served via Phusion Passenger under a subdomain (`api.neurotriq.co.ke`), reverse-proxied by Apache/OpenResty. `PORT` is injected by Passenger — never hardcode or override it via env vars.
 
 ### Common tasks with file pointers
-- Add a new API endpoint: implement in `backend/server.js` (or factor to a router and mount it), update types and frontend hooks/components accordingly. Keep SQL prepared statements with `db.prepare(...).run/get/all`.
+- Add a new API endpoint: implement in `backend/server.js`, reuse the existing `jwtAuth` or `adminAuth` middleware if it needs protecting. Keep SQL as prepared statements with `db.prepare(...).run/get/all`.
 - Create a new page/route: add a file under `src/pages/`, export a React component, and register in `src/App.tsx` `Routes`.
-- Use images/assets: place under `src/assets/`; import via ES modules or reference with Vite’s asset handling. Mind existing folder names with spaces.
+- Use images/assets: place under `src/assets/`; import via ES modules or reference with Vite's asset handling. Mind existing folder names with spaces. The backend has its own copy of the logo at `backend/assets/neurotriq_logo.png` for PDF/Excel letterheads — keep both in sync if the logo changes.
 
 ### Quick references
-- Backend endpoints (current): `POST /api/contact`, `GET /api/admin/contacts`, `GET /api/health`.
-- Key files: `backend/server.js`, `backend/database.js`, `src/pages/Contact.tsx`, `src/pages/AdminLogin.tsx`, `src/pages/AdminDashboard.tsx`, `vite.config.ts`, `tsconfig.json`.
-
-If anything above looks off or you need the admin flow wired one way or the other, ask which approach to standardize and I’ll align both frontend and backend in a follow-up.
+- Backend endpoints (current): `POST /api/contact`, `POST /api/admin/login`, `GET /api/admin/messages`, `PATCH /api/admin/messages/:id/read`, `GET /api/admin/messages/export/pdf`, `GET /api/admin/messages/export/excel`, `GET /api/admin/contacts` (static-token variant), `GET /api/health`.
+- Key files: `backend/server.js`, `backend/database.js`, `.cpanel.yml`, `src/pages/Contact.tsx`, `src/pages/AdminLogin.tsx`, `src/pages/AdminDashboard.tsx`, `vite.config.ts`, `tsconfig.json`.

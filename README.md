@@ -5,7 +5,7 @@ Modern company website for NeuroTriQ with a React + Vite + TypeScript frontend a
 ## Tech stack
 
 - Frontend: Vite, React 18, TypeScript, Tailwind CSS, shadcn/ui, Radix UI
-- Backend: Node.js, Express, better-sqlite3, Nodemailer, CORS, dotenv
+- Backend: Node.js, Express, node:sqlite (built-in, Node 22.5+), Nodemailer, CORS, dotenv
 
 ## Repository layout
 
@@ -94,7 +94,7 @@ npm run preview
 - GET `/api/admin/contacts` – lists stored contacts (basic admin listing)
 - GET `/api/health` – health check
 
-Database: `backend/database.sqlite` (auto-created on first run via better-sqlite3).
+Database: `backend/database.sqlite` (auto-created on first run via Node's built-in `node:sqlite`).
 
 ## Deployment notes
 
