@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/ui/navbar";
@@ -369,34 +369,37 @@ const Home = () => {
       {/* Why Choose Us Section */}
       <section className="py-20 mesh-3d">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <Badge variant="outline" className="mb-4">Why Choose NeuroTriQ</Badge>
-              <h2 className="text-3xl md:text-4xl font-bold mb-6">
-                Your Trusted Technology Partner
-              </h2>
-              <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-                With over 15 years of experience and a proven track record of success, 
-                NeuroTriQ stands as your reliable partner for all technology needs. 
-                We combine innovation with reliability to deliver solutions that exceed expectations.
-              </p>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-                {features.map((feature, index) => (
-                  <div key={index} className="flex items-center space-x-2">
-                    <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />
-                    <span className="text-sm font-medium">{feature}</span>
-                  </div>
-                ))}
-              </div>
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <Badge variant="outline" className="mb-4">Why Choose NeuroTriQ</Badge>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">
+              Your Trusted Technology Partner
+            </h2>
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              With over 15 years of experience and a proven track record of success,
+              NeuroTriQ stands as your reliable partner for all technology needs.
+              We combine innovation with reliability to deliver solutions that exceed expectations.
+            </p>
+          </div>
 
-              <Button size="lg" className="btn-tech">
-                Get Started Today
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </div>
-            
-            {/* Right-side decorative card removed per request (Award Winning and ISO mention removed) */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-10">
+            {features.map((feature, index) => (
+              <div
+                key={index}
+                className="flex flex-col items-center text-center gap-3 p-6 rounded-xl bg-card border border-border hover:border-primary/40 transition-colors duration-300"
+              >
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <CheckCircle className="h-6 w-6 text-primary" />
+                </div>
+                <span className="text-sm font-medium">{feature}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <Button size="lg" className="btn-tech">
+              Get Started Today
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
           </div>
         </div>
       </section>
