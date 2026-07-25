@@ -284,104 +284,83 @@ const Home = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {[
               {
-                icon: <Mic className="h-8 w-8" />,
+                icon: <Mic className="h-5 w-5" />,
                 title: "PA Systems",
-                description: "Professional public address and sound reinforcement systems for any venue size",
-                features: ["Zone Control", "Emergency Broadcast", "High-Fidelity Audio"]
+                description: "Public address and sound reinforcement for any venue size"
               },
               {
-                icon: <Network className="h-8 w-8" />,
+                icon: <Network className="h-5 w-5" />,
                 title: "IP Systems",
-                description: "Advanced IP-based communication and control systems for modern infrastructure",
-                features: ["Networked Control", "Remote Access", "Scalable Architecture"]
+                description: "IP-based communication and control for modern infrastructure"
               },
               {
-                icon: <Shield className="h-8 w-8" />,
+                icon: <Shield className="h-5 w-5" />,
                 title: "EVAC Systems",
-                description: "Emergency voice alarm and communication systems for safety-critical applications",
-                features: ["Life Safety", "EN54 Compliant", "Priority Messaging"]
+                description: "Emergency voice alarm and communication for safety-critical sites"
               },
               {
-                icon: <Wifi className="h-8 w-8" />,
+                icon: <Wifi className="h-5 w-5" />,
                 title: "5G WiFi Conference",
-                description: "High-speed wireless conferencing solutions with 5G connectivity",
-                features: ["Ultra-Fast Speeds", "Low Latency", "Multi-Device Support"]
+                description: "High-speed wireless conferencing with 5G connectivity"
               },
               {
-                icon: <FileText className="h-8 w-8" />,
+                icon: <FileText className="h-5 w-5" />,
                 title: "Paperless Conference",
-                description: "Digital meeting solutions eliminating paper with interactive displays",
-                features: ["Digital Workflow", "Real-time Collaboration", "Eco-Friendly"]
+                description: "Digital meeting solutions with interactive displays"
               },
               {
-                icon: <Monitor className="h-8 w-8" />,
+                icon: <Monitor className="h-5 w-5" />,
                 title: "LED Displays",
-                description: "High-resolution LED video walls and digital signage solutions",
-                features: ["4K/8K Resolution", "Modular Design", "Indoor/Outdoor"]
+                description: "High-resolution LED video walls and digital signage"
               },
               {
-                icon: <Settings className="h-8 w-8" />,
+                icon: <Settings className="h-5 w-5" />,
                 title: "Central Control",
-                description: "Unified control systems for managing all your technology from one interface",
-                features: ["Touch Panel Control", "Automation", "User-Friendly"]
+                description: "Unified control for managing all your technology"
               },
               {
-                icon: <Grid3x3 className="h-8 w-8" />,
+                icon: <Grid3x3 className="h-5 w-5" />,
                 title: "Matrix Systems",
-                description: "Video and audio matrix switching for complex AV routing requirements",
-                features: ["Multiple I/O", "Seamless Switching", "4K Support"]
+                description: "Video and audio matrix switching for complex AV routing"
               },
               {
-                icon: <Video className="h-8 w-8" />,
+                icon: <Video className="h-5 w-5" />,
                 title: "VMS Systems",
-                description: "Video management systems for comprehensive surveillance monitoring",
-                features: ["Multi-Camera Support", "Analytics", "Cloud Storage"]
+                description: "Video management for comprehensive surveillance monitoring"
               },
               {
-                icon: <Projector className="h-8 w-8" />,
+                icon: <Projector className="h-5 w-5" />,
                 title: "Stage Lighting",
-                description: "Professional stage lighting systems for performances and events",
-                features: ["DMX Control", "Color Mixing", "Programmable Scenes"]
+                description: "Professional stage lighting for performances and events"
               },
               {
-                icon: <Building className="h-8 w-8" />,
+                icon: <Building className="h-5 w-5" />,
                 title: "Facade Lighting",
-                description: "Architectural lighting solutions for building exteriors and landmarks",
-                features: ["RGB Control", "Weather-Resistant", "Energy Efficient"]
+                description: "Architectural lighting for building exteriors and landmarks"
               },
               {
-                icon: <Cpu className="h-8 w-8" />,
+                icon: <Cpu className="h-5 w-5" />,
                 title: "Electronics & Networking",
-                description: "Complete range of electronic components and networking infrastructure",
-                features: ["Enterprise Grade", "High Performance", "Reliable Solutions"]
+                description: "Electronic components and networking infrastructure"
               }
             ].map((product, index) => (
-              <Card key={index} className="border-0 shadow-card hover:shadow-tech transition-all duration-300 group">
-                <CardHeader>
-                  <div className="flex items-center space-x-3 mb-2">
-                    <div className="text-primary group-hover:scale-110 transition-transform duration-300">
-                      {product.icon}
-                    </div>
-                    <CardTitle className="text-lg">{product.title}</CardTitle>
-                  </div>
-                  <CardDescription className="leading-relaxed">
+              <div
+                key={index}
+                className="flex items-start gap-3 p-5 rounded-xl border border-border hover:border-primary/40 hover:bg-accent/40 transition-colors duration-300"
+              >
+                <div className="w-9 h-9 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                  {product.icon}
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-1">{product.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
                     {product.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {product.features.map((feature, idx) => (
-                      <div key={idx} className="flex items-center space-x-2">
-                        <CheckCircle className="h-3 w-3 text-primary flex-shrink-0" />
-                        <span className="text-xs text-muted-foreground">{feature}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                  </p>
+                </div>
+              </div>
             ))}
           </div>
         </div>
