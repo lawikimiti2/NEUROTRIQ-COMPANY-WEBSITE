@@ -404,6 +404,9 @@ app.get("/api/debug/env-check", (req, res) => {
     EMAIL_USER: Boolean(process.env.EMAIL_USER),
     EMAIL_PASS: Boolean(process.env.EMAIL_PASS),
     totalEnvVarCount: Object.keys(process.env).length,
+    allEnvVarKeys: Object.keys(process.env).sort(),
+    cwd: process.cwd(),
+    scriptPath: import.meta.url,
   });
 });
 
