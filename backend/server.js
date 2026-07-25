@@ -389,5 +389,23 @@ app.get("/api/admin/messages/export/excel", jwtAuth, async (req, res) => {
 // Health check endpoint
 app.get("/api/health", (req, res) => res.json({ ok: true }));
 
+// TEMPORARY diagnostic endpoint — reports only whether each env var is
+// present, never actual values. Remove once the env var issue is resolved.
+app.get("/api/debug/env-check", (req, res) => {
+  res.json({
+    nodeVersion: process.version,
+    JWT_SECRET: Boolean(process.env.JWT_SECRET),
+    ADMIN_EMAIL: Boolean(process.env.ADMIN_EMAIL),
+    ADMIN_PASS: Boolean(process.env.ADMIN_PASS),
+    ADMIN_TOKEN: Boolean(process.env.ADMIN_TOKEN),
+    CLIENT_URL: process.env.CLIENT_URL || null,
+    CONTACT_EMAIL: Boolean(process.env.CONTACT_EMAIL),
+    EMAIL_HOST: Boolean(process.env.EMAIL_HOST),
+    EMAIL_USER: Boolean(process.env.EMAIL_USER),
+    EMAIL_PASS: Boolean(process.env.EMAIL_PASS),
+    totalEnvVarCount: Object.keys(process.env).length,
+  });
+});
+
 const port = process.env.PORT || 5000;
 app.listen(port, () => console.log(`Server listening on port ${port}`));
