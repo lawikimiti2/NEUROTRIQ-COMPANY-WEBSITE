@@ -5,6 +5,7 @@ import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/ui/footer";
 import { Building2, Handshake, Award, Globe, CheckCircle, ArrowRight } from "lucide-react";
 import { getPartnerLogos } from "@/lib/partnerLogos";
+import hikvisionVisitPhoto from "@/assets/new-photos/photo-at-HKVision-headquarters.jpg";
 import "./Partners.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 // Removed carousel arrows in favor of continuous marquee scroll
@@ -171,6 +172,39 @@ const Partners = () => {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Real Partnership - Site Visit */}
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div className="order-2 lg:order-1">
+              <Badge variant="outline" className="mb-4">Beyond the Logo</Badge>
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">
+                Real Relationships, Not Just Badges
+              </h2>
+              <p className="text-lg text-muted-foreground leading-relaxed mb-6">
+                Our partnerships go beyond certifications on paper. Our team regularly visits
+                partner offices and facilities — like Hikvision's Nairobi office — to stay current
+                on the latest technology, strengthen technical relationships, and ensure our
+                clients get first-hand expertise on the products we deploy.
+              </p>
+              <div className="flex items-center gap-2 text-sm text-primary font-medium">
+                <Handshake className="h-5 w-5" />
+                <span>NeuroTriQ team at Hikvision's Nairobi office</span>
+              </div>
+            </div>
+            <div className="order-1 lg:order-2">
+              <img
+                src={hikvisionVisitPhoto}
+                alt="NeuroTriQ team visiting Hikvision's Nairobi office"
+                className="rounded-2xl shadow-tech w-full h-auto object-cover"
+                loading="lazy"
+                decoding="async"
+              />
             </div>
           </div>
         </div>

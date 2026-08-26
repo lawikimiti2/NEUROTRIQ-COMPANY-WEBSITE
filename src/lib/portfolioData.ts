@@ -1,4 +1,8 @@
-// Images intentionally left blank for now; will be added later when available.
+import cctvDisplayWall from "@/assets/new-photos/our-projects-cctv-camera-display-screen.jpg";
+import cctvCamera1 from "@/assets/new-photos/our-projects-cctv-camera-1.jpg";
+import doorLockBiometric from "@/assets/new-photos/our-projects-security-door-lock-biometric.jpg";
+import voipPhone1 from "@/assets/new-photos/our-projects-VOIP-phone-1.jpg";
+import voipPhone2 from "@/assets/new-photos/our-projects-VOIP-phone-2.jpg";
 
 export type PortfolioCategoryName = "Consultancy" | "IT" | "Security" | "Smart Building";
 
@@ -37,7 +41,7 @@ export const projects: Project[] = [
     location: "Kenya",
     duration: "Ongoing",
     teamSize: "Field engineers & trainers",
-    image: "",
+    image: cctvDisplayWall,
     description:
       "Installation and commissioning of IP IoT security systems for KenGen including solar-powered CCTV and video walls, with on-site technical personnel and support.",
     challenges: [
@@ -70,7 +74,7 @@ export const projects: Project[] = [
     location: "Kenya",
     duration: "Project-based",
     teamSize: "Security engineers",
-    image: "",
+    image: cctvCamera1,
     description:
       "CCTV installation, switch configurations, and video wall setup with technical personnel and ongoing support.",
   },
@@ -82,7 +86,7 @@ export const projects: Project[] = [
     location: "Kenya",
     duration: "Workshops",
     teamSize: "Trainers & support staff",
-    image: "",
+    image: doorLockBiometric,
     description:
       "Design and deployment of IoT security systems complemented by structured training on modern IP-based surveillance platforms.",
   },
@@ -134,7 +138,7 @@ export const projects: Project[] = [
     location: "Kenya",
     duration: "Ongoing",
     teamSize: "IT engineers",
-    image: "",
+    image: voipPhone1,
     description:
       "Implementation and support for core IT infrastructure, including network and systems optimization.",
   },
@@ -146,7 +150,7 @@ export const projects: Project[] = [
     location: "Kenya",
     duration: "Ongoing",
     teamSize: "IT engineers",
-    image: "",
+    image: voipPhone2,
     description:
       "Business IT setup and ongoing support to ensure secure connectivity and reliable operations.",
   },

@@ -8,6 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, CheckCircle, Download, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 
 // Import security solution images
+import newCctvCamera2 from "@/assets/new-photos/our-projects-cctv-camera-2.jpg";
+import newCctvCamera3 from "@/assets/new-photos/our-projects-cctv-camera-3.jpg";
+import newCctvCamera4 from "@/assets/new-photos/our-projects-cctv-camera-4.jpg";
+import newCctvCamera5 from "@/assets/new-photos/our-projects-cctv-camera-5.jpg";
+import newCctvDisplayBox from "@/assets/new-photos/our-projects-cctv-display-screen-display-box.jpg";
+import newDoorLockButton from "@/assets/new-photos/our-projects-security-door-lock-button.jpg";
+import newGroundCableMarking from "@/assets/new-photos/our-projects-ground-cable-marking.jpg";
 import secImg1 from "@/assets/SECURITY SOLUTIONS/IMG-20251028-WA0007.jpg";
 import secImg2 from "@/assets/SECURITY SOLUTIONS/IMG-20251028-WA0008.jpg";
 import secImg3 from "@/assets/SECURITY SOLUTIONS/IMG-20251028-WA0009.jpg";
@@ -25,6 +32,8 @@ import secImg14 from "@/assets/SECURITY SOLUTIONS/IMG-20251028-WA0021.jpg";
 import secImg15 from "@/assets/SECURITY SOLUTIONS/IMG-20251028-WA0022.jpg";
 
 const securityImages = [
+  newCctvCamera2, newCctvCamera3, newCctvCamera4, newCctvCamera5,
+  newCctvDisplayBox, newDoorLockButton, newGroundCableMarking,
   secImg1, secImg2, secImg3, secImg4, secImg5,
   secImg6, secImg7, secImg8, secImg9, secImg10,
   secImg11, secImg12, secImg13, secImg14, secImg15
