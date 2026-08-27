@@ -29,16 +29,28 @@ const categoryFolderTokens: Record<CategoryName, string[]> = {
   consultancy: ["consultancy works", "consultancy"],
 };
 
-function findFirstMatch(tokens: string[]): string | undefined {
+function findAllMatches(tokens: string[]): string[] {
   const entries = Object.entries(allImages);
   // Prefer deterministic ordering by path
   entries.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
   const lowerTokens = tokens.map((t) => t.toLowerCase());
-  const found = entries.find(([path]) => {
-    const p = path.toLowerCase();
-    return lowerTokens.some((tok) => p.includes(tok));
-  });
-  return found?.[1];
+  return entries
+    .filter(([path]) => {
+      const p = path.toLowerCase();
+      return lowerTokens.some((tok) => p.includes(tok));
+    })
+    .map(([, url]) => url);
+}
+
+function findFirstMatch(tokens: string[]): string | undefined {
+  return findAllMatches(tokens)[0];
+}
+
+// All images available for a category's folder, for callers that want to
+// show a different photo per item instead of repeating the same one.
+export function getCategoryImages(category: CategoryName): string[] {
+  const matches = findAllMatches(categoryFolderTokens[category]);
+  return matches.length > 0 ? matches : Object.values(allImages);
 }
 
 export function pickCategoryImage(category: CategoryName): string {

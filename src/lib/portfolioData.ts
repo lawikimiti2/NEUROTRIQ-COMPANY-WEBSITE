@@ -1,5 +1,5 @@
-import cctvDisplayWall from "@/assets/new-photos/our-projects-cctv-camera-display-screen.jpg";
 import cctvCamera1 from "@/assets/new-photos/our-projects-cctv-camera-1.jpg";
+import cctvCamera3 from "@/assets/new-photos/our-projects-cctv-camera-3.jpg";
 import doorLockBiometric from "@/assets/new-photos/our-projects-security-door-lock-biometric.jpg";
 import voipPhone1 from "@/assets/new-photos/our-projects-VOIP-phone-1.jpg";
 import voipPhone2 from "@/assets/new-photos/our-projects-VOIP-phone-2.jpg";
@@ -41,7 +41,7 @@ export const projects: Project[] = [
     location: "Kenya",
     duration: "Ongoing",
     teamSize: "Field engineers & trainers",
-    image: cctvDisplayWall,
+    image: cctvCamera3,
     description:
       "Installation and commissioning of IP IoT security systems for KenGen including solar-powered CCTV and video walls, with on-site technical personnel and support.",
     challenges: [

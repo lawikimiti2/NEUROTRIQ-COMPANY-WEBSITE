@@ -9,7 +9,7 @@ import { ArrowLeft, CheckCircle, Download, Calendar, ChevronLeft, ChevronRight }
 
 // Import security solution images
 import newCctvCamera2 from "@/assets/new-photos/our-projects-cctv-camera-2.jpg";
-import newCctvCamera3 from "@/assets/new-photos/our-projects-cctv-camera-3.jpg";
+import newCctvDisplayWall from "@/assets/new-photos/our-projects-cctv-camera-display-screen.jpg";
 import newCctvCamera4 from "@/assets/new-photos/our-projects-cctv-camera-4.jpg";
 import newCctvCamera5 from "@/assets/new-photos/our-projects-cctv-camera-5.jpg";
 import newCctvDisplayBox from "@/assets/new-photos/our-projects-cctv-display-screen-display-box.jpg";
@@ -32,7 +32,7 @@ import secImg14 from "@/assets/SECURITY SOLUTIONS/IMG-20251028-WA0021.jpg";
 import secImg15 from "@/assets/SECURITY SOLUTIONS/IMG-20251028-WA0022.jpg";
 
 const securityImages = [
-  newCctvCamera2, newCctvCamera3, newCctvCamera4, newCctvCamera5,
+  newCctvCamera2, newCctvDisplayWall, newCctvCamera4, newCctvCamera5,
   newCctvDisplayBox, newDoorLockButton, newGroundCableMarking,
   secImg1, secImg2, secImg3, secImg4, secImg5,
   secImg6, secImg7, secImg8, secImg9, secImg10,

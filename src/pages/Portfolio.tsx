@@ -18,8 +18,37 @@ import {
   ExternalLink,
   Star
 } from "lucide-react";
-import { projects as realProjects, categories as realCategories } from "@/lib/portfolioData";
+import { projects as realProjects, categories as realCategories, PortfolioCategoryName } from "@/lib/portfolioData";
+import { getCategoryImages } from "@/lib/categoryImages";
 import "./portfolio-mesh.css";
+
+// Fall back to a representative category photo when a project has no specific image yet.
+// Cycles through the category's available photos so consecutive projects in the same
+// category don't all show the exact same fallback image.
+const categoryFallbackImages: Record<PortfolioCategoryName, string[]> = {
+  Consultancy: getCategoryImages("consultancy"),
+  IT: getCategoryImages("it"),
+  Security: getCategoryImages("security"),
+  "Smart Building": getCategoryImages("smart"),
+};
+const categoryFallbackCursor: Record<PortfolioCategoryName, number> = {
+  Consultancy: 0,
+  IT: 0,
+  Security: 0,
+  "Smart Building": 0,
+};
+
+const projectImageCache = new Map<number, string>();
+const getProjectImage = (project: { id: number; image: string; category: PortfolioCategoryName }) => {
+  if (project.image) return project.image;
+  const cached = projectImageCache.get(project.id);
+  if (cached) return cached;
+  const images = categoryFallbackImages[project.category];
+  const picked = images[categoryFallbackCursor[project.category] % images.length];
+  categoryFallbackCursor[project.category] += 1;
+  projectImageCache.set(project.id, picked);
+  return picked;
+};
 
 const Portfolio = () => {
   const projects = realProjects;
@@ -87,16 +116,14 @@ const Portfolio = () => {
       </section>
 
       {/* Project Stats */}
-  <section className="py-16 bg-primary text-primary-foreground relative z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
-            {projectStats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="text-3xl md:text-4xl font-bold mb-2">{stat.value}</div>
-                <div className="text-sm opacity-90">{stat.label}</div>
-              </div>
-            ))}
-          </div>
+  <section className="relative z-10 px-4 sm:px-6 lg:px-8 -mt-10">
+        <div className="max-w-5xl mx-auto bg-card rounded-2xl shadow-hero border border-border/60 grid grid-cols-2 md:grid-cols-3 divide-x divide-y md:divide-y-0 divide-border/60">
+          {projectStats.map((stat, index) => (
+            <div key={index} className="text-center py-8 px-4">
+              <div className="text-3xl md:text-4xl font-semibold text-primary mb-1">{stat.value}</div>
+              <div className="text-sm text-muted-foreground">{stat.label}</div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -131,23 +158,19 @@ const Portfolio = () => {
                   {projects
                     .filter(project => category === "All" || project.category === (category as any))
                     .map((project) => (
-                      <Card key={project.id} className="border-0 shadow-card hover:shadow-tech transition-all duration-300">
-                        {project.image ? (
-                          <div className="relative overflow-hidden rounded-t-lg">
-                            <img 
-                              src={project.image} 
-                              alt={project.title}
-                              className="w-full h-48 object-cover"
-                            />
-                            <div className="absolute top-4 left-4">
-                              <Badge variant="secondary">{project.category}</Badge>
-                            </div>
+                      <Card key={project.id} className="border-0 shadow-card hover:shadow-tech transition-all duration-300 overflow-hidden group">
+                        <div className="relative overflow-hidden">
+                          <img
+                            src={getProjectImage(project)}
+                            alt={project.title}
+                            className="w-full h-64 sm:h-72 object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/0 to-transparent" />
+                          <div className="absolute top-4 left-4">
+                            <Badge variant="secondary">{project.category}</Badge>
                           </div>
-                        ) : null}
+                        </div>
                         <CardHeader>
-                          {!project.image && (
-                            <div className="mb-2"><Badge variant="secondary">{project.category}</Badge></div>
-                          )}
                           <CardTitle className="text-xl mb-2">{project.title}</CardTitle>
                           <CardDescription className="text-base leading-relaxed mb-4">
                             {project.description}
@@ -194,12 +217,20 @@ const Portfolio = () => {
       {/* Detailed Case Study */}
   <section className="py-20 bg-muted/50 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12">
             <Badge variant="outline" className="mb-4">Case Study Spotlight</Badge>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">{projects[0].title}</h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
               {projects[0].description}
             </p>
+          </div>
+
+          <div className="rounded-2xl overflow-hidden shadow-tech mb-12 max-w-5xl mx-auto">
+            <img
+              src={getProjectImage(projects[0])}
+              alt={projects[0].title}
+              className="w-full h-64 sm:h-96 object-cover"
+            />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -310,12 +341,12 @@ const Portfolio = () => {
       </section>
 
       {/* CTA Section */}
-  <section className="py-20 bg-primary text-primary-foreground relative z-10">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+  <section className="py-20 px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="max-w-5xl mx-auto rounded-3xl bg-gradient-to-br from-primary to-primary-dark text-primary-foreground px-8 py-16 sm:px-16 text-center">
+          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-4">
             Ready to Start Your Next Project?
           </h2>
-          <p className="text-xl opacity-90 mb-8">
+          <p className="text-lg md:text-xl opacity-90 mb-10 max-w-2xl mx-auto">
             Join our growing list of satisfied clients and transform your technology infrastructure.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
