@@ -63,9 +63,30 @@ app.use(express.json({ limit: '100kb' }));
 // Helmet adds common security headers
 app.use(helmet());
 
-// CORS: restrict to configured client URL if available
-const allowedOrigin = process.env.CLIENT_URL || true;
-app.use(cors({ origin: allowedOrigin, credentials: true }));
+// CORS: restrict to the configured client URL, plus its www/non-www
+// counterpart — the site is reachable at both (e.g. www.neurotriq.co.ke
+// serves directly rather than redirecting to the bare domain), and a
+// mismatch here doesn't show up as a CORS error: the browser silently
+// discards the response, which looks exactly like a rejected login.
+const configuredOrigin = process.env.CLIENT_URL;
+const allowedOrigins = configuredOrigin
+  ? [
+      configuredOrigin,
+      configuredOrigin.startsWith("https://www.")
+        ? configuredOrigin.replace("https://www.", "https://")
+        : configuredOrigin.replace("https://", "https://www."),
+    ]
+  : null;
+
+app.use(cors({
+  origin: allowedOrigins
+    ? (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+        return callback(new Error("Not allowed by CORS"));
+      }
+    : true,
+  credentials: true,
+}));
 
 // Global rate limiter (burst control)
 const globalLimiter = rateLimit({
