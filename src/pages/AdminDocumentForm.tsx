@@ -136,7 +136,7 @@ const AdminDocumentForm = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="py-20">
+      <main className="pt-24 pb-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <Link to="/admin/documents" className="inline-flex items-center text-sm text-primary hover:underline mb-6">
             <ArrowLeft className="h-4 w-4 mr-1" />
