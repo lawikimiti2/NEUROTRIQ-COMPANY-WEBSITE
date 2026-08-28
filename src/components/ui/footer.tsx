@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Mail, Phone, MapPin, Linkedin, Twitter, Facebook } from "lucide-react";
-import logo from "@/assets/neurotriq_logo.png";
+import logo from "@/assets/neurotriq_logo_ui.png";
 
 const Footer = () => {
   return (
@@ -11,7 +11,7 @@ const Footer = () => {
           {/* Company Info */}
           <div className="space-y-4">
             <div className="flex items-center">
-              <img src={logo} alt="NeuroTriQ Logo" className="h-16 w-auto" />
+              <img src={logo} alt="NeuroTriQ Logo" className="h-20 w-auto" />
             </div>
             <p className="text-muted-foreground leading-relaxed">
               Leading tech solutions provider specializing in IT infrastructure, 

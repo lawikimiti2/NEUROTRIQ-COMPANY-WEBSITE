@@ -50,7 +50,7 @@ db.prepare(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     type TEXT NOT NULL CHECK(type IN ('quote','invoice','receipt')),
     number TEXT NOT NULL UNIQUE,
-    status TEXT NOT NULL DEFAULT 'draft',
+    status TEXT NOT NULL DEFAULT 'open',
     clientName TEXT NOT NULL,
     clientEmail TEXT,
     clientPhone TEXT,
@@ -69,5 +69,8 @@ db.prepare(`
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
   )
 `).run();
+
+// Migration: the initial status value was renamed from "draft" to "open"
+db.prepare("UPDATE documents SET status = 'open' WHERE status = 'draft'").run();
 
 export default db;

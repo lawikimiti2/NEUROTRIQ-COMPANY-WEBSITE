@@ -29,7 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Download, ChevronDown, Loader2 } from "lucide-react";
 
 type DocumentType = "quote" | "invoice" | "receipt";
-type DocumentStatus = "draft" | "sent" | "accepted" | "paid" | "void";
+type DocumentStatus = "open" | "sent" | "accepted" | "paid" | "void";
 
 type Doc = {
   id: number;
@@ -49,7 +49,7 @@ const typeLabels: Record<DocumentType, string> = {
 };
 
 const statusVariant: Record<DocumentStatus, "default" | "secondary" | "destructive" | "outline"> = {
-  draft: "secondary",
+  open: "secondary",
   sent: "outline",
   accepted: "default",
   paid: "default",
@@ -159,10 +159,10 @@ const AdminDocuments = () => {
 
   const statusOptionsFor = (type: DocumentType): DocumentStatus[] =>
     type === "receipt"
-      ? ["draft", "sent", "void"]
+      ? ["open", "sent", "void"]
       : type === "invoice"
-      ? ["draft", "sent", "paid", "void"]
-      : ["draft", "sent", "accepted", "void"];
+      ? ["open", "sent", "paid", "void"]
+      : ["open", "sent", "accepted", "void"];
 
   return (
     <div className="min-h-screen bg-background">

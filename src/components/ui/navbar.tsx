@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
-import logo from "@/assets/neurotriq_logo.png";
+import logo from "@/assets/neurotriq_logo_ui.png";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -22,13 +22,13 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
+        <div className="flex justify-between items-center h-24">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3">
-            <img 
-              src={logo} 
-              alt="NeuroTriQ Logo" 
-              className="h-20 w-auto" 
+            <img
+              src={logo}
+              alt="NeuroTriQ Logo"
+              className="h-24 w-auto"
             />
           </Link>
 

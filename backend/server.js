@@ -457,7 +457,7 @@ app.post("/api/admin/documents", jwtAuth, (req, res) => {
     const result = stmt.run(
       type,
       number,
-      "draft",
+      "open",
       clean(clientName),
       clean(clientEmail) || null,
       clean(clientPhone) || null,
@@ -509,12 +509,12 @@ app.get("/api/admin/documents/:id", jwtAuth, (req, res) => {
   }
 });
 
-// Update a document's status (draft -> sent -> paid/accepted, or void)
+// Update a document's status (open -> sent -> paid/accepted, or void)
 app.patch("/api/admin/documents/:id", jwtAuth, (req, res) => {
   try {
     const id = Number(req.params.id);
     const { status } = req.body;
-    const allowedStatuses = ["draft", "sent", "accepted", "paid", "void"];
+    const allowedStatuses = ["open", "sent", "accepted", "paid", "void"];
     if (!allowedStatuses.includes(status)) {
       return res.status(400).json({ error: "Invalid status" });
     }
