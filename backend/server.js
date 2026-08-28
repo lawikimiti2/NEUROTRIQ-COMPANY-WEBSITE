@@ -16,6 +16,11 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: join(__dirname, ".env") });
 
 const LOGO_PATH = join(__dirname, "assets", "neurotriq_logo.png");
+// Tightly-trimmed version (source PNG has ~17% dead transparent padding
+// baked in, which made the logo look small/blurry at a given width) —
+// used for PDF letterheads. Excel export keeps the original, since its
+// image dimensions are calibrated to that file's exact aspect ratio.
+const LOGO_PATH_UI = join(__dirname, "assets", "neurotriq_logo_ui.png");
 const COMPANY = {
   name: "NeuroTriQ Company Limited",
   address: "Kins Arcade, Ground Floor, Ongata Rongai | P.O. Box 4983-00100 Nairobi, Kenya",
@@ -274,10 +279,10 @@ app.get("/api/admin/messages/export/pdf", jwtAuth, (req, res) => {
     doc.pipe(res);
 
     // Letterhead
-    doc.image(LOGO_PATH, 40, 25, { width: 45 });
-    doc.font("Helvetica-Bold").fontSize(15).text(COMPANY.name, 95, 28);
-    doc.font("Helvetica").fontSize(8).text(COMPANY.address, 95, 46);
-    doc.text(COMPANY.contact, 95, 57);
+    doc.image(LOGO_PATH_UI, 40, 20, { width: 62 });
+    doc.font("Helvetica-Bold").fontSize(15).text(COMPANY.name, 112, 28);
+    doc.font("Helvetica").fontSize(8).text(COMPANY.address, 112, 46);
+    doc.text(COMPANY.contact, 112, 57);
     doc.moveTo(40, 80).lineTo(doc.page.width - 40, 80).stroke();
 
     doc.font("Helvetica-Bold").fontSize(13).text("Contact Messages Report", 40, 90);
@@ -545,12 +550,27 @@ app.get("/api/admin/documents/:id/pdf", jwtAuth, async (req, res) => {
     const doc = new PDFDocument({ margin: 50, size: "A4" });
     doc.pipe(res);
 
-    // Letterhead
-    doc.image(LOGO_PATH, 50, 40, { width: 55 });
-    doc.font("Helvetica-Bold").fontSize(16).text(COMPANY.name, 115, 42);
-    doc.font("Helvetica").fontSize(9).text(COMPANY.address, 115, 62);
-    doc.text(COMPANY.contact, 115, 74);
-    doc.text(`KRA PIN: ${COMPANY.kraPin}`, 115, 86);
+    // Letterhead — text width is capped so a long line wraps instead of
+    // running into the QR code's space (drawn afterward, so it would
+    // otherwise paint over the tail end rather than actually overlapping).
+    // Each line's y is computed from the actual (possibly wrapped) height
+    // of the one before it, rather than guessed fixed offsets.
+    doc.image(LOGO_PATH_UI, 50, 35, { width: 80 });
+    const letterheadX = 145;
+    const letterheadWidth = 290;
+    let letterheadY = 42;
+    doc.font("Helvetica-Bold").fontSize(16);
+    doc.text(COMPANY.name, letterheadX, letterheadY, { width: letterheadWidth });
+    letterheadY += doc.heightOfString(COMPANY.name, { width: letterheadWidth }) + 4;
+
+    doc.font("Helvetica").fontSize(9);
+    doc.text(COMPANY.address, letterheadX, letterheadY, { width: letterheadWidth });
+    letterheadY += doc.heightOfString(COMPANY.address, { width: letterheadWidth }) + 2;
+
+    doc.text(COMPANY.contact, letterheadX, letterheadY, { width: letterheadWidth });
+    letterheadY += doc.heightOfString(COMPANY.contact, { width: letterheadWidth }) + 2;
+
+    doc.text(`KRA PIN: ${COMPANY.kraPin}`, letterheadX, letterheadY, { width: letterheadWidth });
 
     doc.image(qrBuffer, doc.page.width - 130, 40, { width: 80 });
     doc.font("Helvetica").fontSize(7).text("Scan to verify", doc.page.width - 130, 122, { width: 80, align: "center" });
