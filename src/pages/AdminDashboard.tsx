@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/ui/footer";
 import { Button } from "@/components/ui/button";
@@ -162,6 +162,9 @@ const AdminDashboard = () => {
               </p>
             </div>
             <div className="flex items-center gap-2">
+              <Link to="/admin/documents">
+                <Button variant="ghost">Documents</Button>
+              </Link>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" disabled={exporting !== null || messages.length === 0}>

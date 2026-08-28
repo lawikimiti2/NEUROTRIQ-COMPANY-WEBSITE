@@ -42,4 +42,32 @@ db.prepare(`
   )
 `).run();
 
+// Quotes, invoices, and receipts share the same shape (client info, line
+// items, totals) so they live in one table distinguished by `type`, rather
+// than three near-identical tables.
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS documents (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    type TEXT NOT NULL CHECK(type IN ('quote','invoice','receipt')),
+    number TEXT NOT NULL UNIQUE,
+    status TEXT NOT NULL DEFAULT 'draft',
+    clientName TEXT NOT NULL,
+    clientEmail TEXT,
+    clientPhone TEXT,
+    clientAddress TEXT,
+    issueDate TEXT NOT NULL,
+    dueDate TEXT,
+    validUntil TEXT,
+    paymentMethod TEXT,
+    relatedInvoiceNumber TEXT,
+    lineItems TEXT NOT NULL,
+    subtotal REAL NOT NULL,
+    taxRate REAL NOT NULL DEFAULT 0,
+    taxAmount REAL NOT NULL DEFAULT 0,
+    total REAL NOT NULL,
+    notes TEXT,
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+  )
+`).run();
+
 export default db;

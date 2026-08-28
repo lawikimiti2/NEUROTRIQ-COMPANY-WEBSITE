@@ -8,6 +8,7 @@ import db from "./database.js";
 import nodemailer from "nodemailer";
 import PDFDocument from "pdfkit";
 import ExcelJS from "exceljs";
+import QRCode from "qrcode";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
@@ -19,7 +20,36 @@ const COMPANY = {
   name: "NeuroTriQ Company Limited",
   address: "Kins Arcade, Ground Floor, Ongata Rongai | P.O. Box 4983-00100 Nairobi, Kenya",
   contact: "Phone: 0795344905 | Email: info@neurotriq.co.ke",
+  kraPin: "P052459770V",
 };
+
+const DOCUMENT_TYPES = ["quote", "invoice", "receipt"];
+const DOCUMENT_LABELS = { quote: "QUOTATION", invoice: "INVOICE", receipt: "RECEIPT" };
+const DOCUMENT_PREFIXES = { quote: "QUO", invoice: "INV", receipt: "RCT" };
+
+function generateDocumentNumber(type) {
+  const year = new Date().getFullYear();
+  const prefix = `${DOCUMENT_PREFIXES[type]}-${year}-`;
+  const row = db
+    .prepare("SELECT COUNT(*) as count FROM documents WHERE number LIKE ?")
+    .get(`${prefix}%`);
+  const seq = (row?.count || 0) + 1;
+  return `${prefix}${String(seq).padStart(4, "0")}`;
+}
+
+function computeTotals(lineItems, taxRate) {
+  const subtotal = lineItems.reduce(
+    (sum, item) => sum + Number(item.quantity) * Number(item.unitPrice),
+    0
+  );
+  const taxAmount = subtotal * (Number(taxRate) / 100);
+  const total = subtotal + taxAmount;
+  return { subtotal, taxAmount, total };
+}
+
+function serializeDocument(row) {
+  return { ...row, lineItems: JSON.parse(row.lineItems) };
+}
 
 const app = express();
 app.disable('x-powered-by');
@@ -380,6 +410,254 @@ app.get("/api/admin/messages/export/excel", jwtAuth, async (req, res) => {
     res.setHeader("Content-Disposition", 'attachment; filename="contact-messages.xlsx"');
     await workbook.xlsx.write(res);
     res.end();
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Create a quote, invoice, or receipt
+app.post("/api/admin/documents", jwtAuth, (req, res) => {
+  try {
+    const { type, clientName, clientEmail, clientPhone, clientAddress,
+      issueDate, dueDate, validUntil, paymentMethod, relatedInvoiceNumber,
+      lineItems, taxRate, notes } = req.body;
+
+    if (!DOCUMENT_TYPES.includes(type)) {
+      return res.status(400).json({ error: "Invalid document type" });
+    }
+    if (!clientName || typeof clientName !== "string") {
+      return res.status(400).json({ error: "Client name is required" });
+    }
+    if (!Array.isArray(lineItems) || lineItems.length === 0) {
+      return res.status(400).json({ error: "At least one line item is required" });
+    }
+    for (const item of lineItems) {
+      if (!item.description || !(Number(item.quantity) > 0) || !(Number(item.unitPrice) >= 0)) {
+        return res.status(400).json({ error: "Each line item needs a description, a positive quantity, and a unit price" });
+      }
+    }
+
+    const cleanLineItems = lineItems.map((item) => ({
+      description: clean(String(item.description)),
+      quantity: Number(item.quantity),
+      unitPrice: Number(item.unitPrice),
+    }));
+    const rate = Number(taxRate) || 0;
+    const { subtotal, taxAmount, total } = computeTotals(cleanLineItems, rate);
+    const number = generateDocumentNumber(type);
+
+    const stmt = db.prepare(`
+      INSERT INTO documents (
+        type, number, status, clientName, clientEmail, clientPhone, clientAddress,
+        issueDate, dueDate, validUntil, paymentMethod, relatedInvoiceNumber,
+        lineItems, subtotal, taxRate, taxAmount, total, notes
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const result = stmt.run(
+      type,
+      number,
+      "draft",
+      clean(clientName),
+      clean(clientEmail) || null,
+      clean(clientPhone) || null,
+      clean(clientAddress) || null,
+      issueDate || new Date().toISOString().slice(0, 10),
+      dueDate || null,
+      validUntil || null,
+      paymentMethod || null,
+      relatedInvoiceNumber || null,
+      JSON.stringify(cleanLineItems),
+      subtotal,
+      rate,
+      taxAmount,
+      total,
+      clean(notes) || null
+    );
+
+    const record = db.prepare("SELECT * FROM documents WHERE id = ?").get(result.lastInsertRowid);
+    res.status(201).json({ document: serializeDocument(record) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// List quotes/invoices/receipts, optionally filtered by ?type=
+app.get("/api/admin/documents", jwtAuth, (req, res) => {
+  try {
+    const { type } = req.query;
+    const rows = type && DOCUMENT_TYPES.includes(type)
+      ? db.prepare("SELECT * FROM documents WHERE type = ? ORDER BY createdAt DESC").all(type)
+      : db.prepare("SELECT * FROM documents ORDER BY createdAt DESC").all();
+    res.json({ documents: rows.map(serializeDocument) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Get one document (admin, full detail)
+app.get("/api/admin/documents/:id", jwtAuth, (req, res) => {
+  try {
+    const row = db.prepare("SELECT * FROM documents WHERE id = ?").get(Number(req.params.id));
+    if (!row) return res.status(404).json({ error: "Not found" });
+    res.json({ document: serializeDocument(row) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Update a document's status (draft -> sent -> paid/accepted, or void)
+app.patch("/api/admin/documents/:id", jwtAuth, (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const { status } = req.body;
+    const allowedStatuses = ["draft", "sent", "accepted", "paid", "void"];
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({ error: "Invalid status" });
+    }
+    db.prepare("UPDATE documents SET status = ? WHERE id = ?").run(status, id);
+    const row = db.prepare("SELECT * FROM documents WHERE id = ?").get(id);
+    if (!row) return res.status(404).json({ error: "Not found" });
+    res.json({ document: serializeDocument(row) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Generate the branded PDF for a quote/invoice/receipt, with a QR code
+// linking to its public verification page
+app.get("/api/admin/documents/:id/pdf", jwtAuth, async (req, res) => {
+  try {
+    const row = db.prepare("SELECT * FROM documents WHERE id = ?").get(Number(req.params.id));
+    if (!row) return res.status(404).json({ error: "Not found" });
+    const record = serializeDocument(row);
+
+    const verifyUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/verify/${record.number}`;
+    const qrBuffer = await QRCode.toBuffer(verifyUrl, { width: 200, margin: 1 });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${record.number}.pdf"`);
+
+    const doc = new PDFDocument({ margin: 50, size: "A4" });
+    doc.pipe(res);
+
+    // Letterhead
+    doc.image(LOGO_PATH, 50, 40, { width: 55 });
+    doc.font("Helvetica-Bold").fontSize(16).text(COMPANY.name, 115, 42);
+    doc.font("Helvetica").fontSize(9).text(COMPANY.address, 115, 62);
+    doc.text(COMPANY.contact, 115, 74);
+    doc.text(`KRA PIN: ${COMPANY.kraPin}`, 115, 86);
+
+    doc.image(qrBuffer, doc.page.width - 130, 40, { width: 80 });
+    doc.font("Helvetica").fontSize(7).text("Scan to verify", doc.page.width - 130, 122, { width: 80, align: "center" });
+
+    doc.moveTo(50, 150).lineTo(doc.page.width - 50, 150).stroke();
+
+    // Title + meta
+    doc.font("Helvetica-Bold").fontSize(18).text(DOCUMENT_LABELS[record.type], 50, 165);
+    doc.font("Helvetica").fontSize(10).text(`#${record.number}`, 50, 188);
+    doc.text(`Status: ${record.status.toUpperCase()}`, doc.page.width - 200, 188, { width: 150, align: "right" });
+
+    let metaY = 210;
+    doc.text(`Issue Date: ${record.issueDate}`, 50, metaY);
+    if (record.type === "invoice" && record.dueDate) {
+      doc.text(`Due Date: ${record.dueDate}`, 250, metaY);
+    }
+    if (record.type === "quote" && record.validUntil) {
+      doc.text(`Valid Until: ${record.validUntil}`, 250, metaY);
+    }
+    if (record.type === "receipt") {
+      if (record.paymentMethod) doc.text(`Payment Method: ${record.paymentMethod}`, 250, metaY);
+      if (record.relatedInvoiceNumber) {
+        metaY += 15;
+        doc.text(`For Invoice: ${record.relatedInvoiceNumber}`, 50, metaY);
+      }
+    }
+
+    // Bill To
+    let billY = metaY + 30;
+    doc.font("Helvetica-Bold").fontSize(11).text("Bill To", 50, billY);
+    doc.font("Helvetica").fontSize(10);
+    billY += 16;
+    doc.text(record.clientName, 50, billY);
+    if (record.clientEmail) { billY += 14; doc.text(record.clientEmail, 50, billY); }
+    if (record.clientPhone) { billY += 14; doc.text(record.clientPhone, 50, billY); }
+    if (record.clientAddress) { billY += 14; doc.text(record.clientAddress, 50, billY, { width: 300 }); }
+
+    // Line items table
+    let y = billY + 35;
+    const cols = [
+      { label: "Description", x: 50, width: 250 },
+      { label: "Qty", x: 300, width: 50, align: "right" },
+      { label: "Unit Price", x: 360, width: 90, align: "right" },
+      { label: "Amount", x: 455, width: 95, align: "right" },
+    ];
+    doc.font("Helvetica-Bold").fontSize(9);
+    cols.forEach((c) => doc.text(c.label, c.x, y, { width: c.width, align: c.align }));
+    doc.moveTo(50, y + 14).lineTo(doc.page.width - 50, y + 14).stroke();
+    y += 22;
+
+    doc.font("Helvetica").fontSize(9);
+    record.lineItems.forEach((item) => {
+      if (y > doc.page.height - 150) {
+        doc.addPage();
+        y = 50;
+      }
+      const amount = item.quantity * item.unitPrice;
+      doc.text(item.description, cols[0].x, y, { width: cols[0].width });
+      doc.text(String(item.quantity), cols[1].x, y, { width: cols[1].width, align: "right" });
+      doc.text(item.unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2 }), cols[2].x, y, { width: cols[2].width, align: "right" });
+      doc.text(amount.toLocaleString(undefined, { minimumFractionDigits: 2 }), cols[3].x, y, { width: cols[3].width, align: "right" });
+      y += 18;
+    });
+
+    y += 10;
+    doc.moveTo(300, y).lineTo(doc.page.width - 50, y).stroke();
+    y += 10;
+
+    const totalsRow = (label, value, bold = false) => {
+      doc.font(bold ? "Helvetica-Bold" : "Helvetica").fontSize(bold ? 11 : 10);
+      doc.text(label, 300, y, { width: 155, align: "right" });
+      doc.text(`KES ${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 455, y, { width: 95, align: "right" });
+      y += bold ? 20 : 16;
+    };
+    totalsRow("Subtotal", record.subtotal);
+    if (record.taxRate > 0) totalsRow(`Tax (${record.taxRate}%)`, record.taxAmount);
+    totalsRow("TOTAL", record.total, true);
+
+    if (record.notes) {
+      y += 20;
+      doc.font("Helvetica-Bold").fontSize(10).text("Notes", 50, y);
+      y += 15;
+      doc.font("Helvetica").fontSize(9).text(record.notes, 50, y, { width: doc.page.width - 100 });
+    }
+
+    doc.font("Helvetica").fontSize(8).text(
+      "Thank you for your business.",
+      50,
+      doc.page.height - 60,
+      { width: doc.page.width - 100, align: "center" }
+    );
+
+    doc.end();
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Public verification lookup — no auth, intentionally: this is what the QR
+// code on a printed/emailed document resolves to, so anyone holding a
+// document can confirm it's genuine.
+app.get("/api/verify/:number", (req, res) => {
+  try {
+    const row = db.prepare("SELECT * FROM documents WHERE number = ?").get(req.params.number);
+    if (!row) return res.status(404).json({ error: "No document found with that number" });
+    res.json({ document: serializeDocument(row) });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
