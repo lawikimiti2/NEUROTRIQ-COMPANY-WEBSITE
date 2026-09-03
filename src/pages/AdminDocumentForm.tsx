@@ -36,6 +36,17 @@ const THEME_COLORS = [
   { name: "Teal", value: "#0f766e" },
 ];
 
+// Kept light on purpose — body text stays plain black, so a dark page
+// background would make the document hard to read.
+const BACKGROUND_COLORS = [
+  { name: "White", value: "#ffffff" },
+  { name: "Light Blue", value: "#eaf3fc" },
+  { name: "Light Gray", value: "#f3f4f6" },
+  { name: "Cream", value: "#fdf6e3" },
+  { name: "Light Green", value: "#ecfdf3" },
+  { name: "Light Pink", value: "#fdf2f8" },
+];
+
 const AdminDocumentForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -57,6 +68,7 @@ const AdminDocumentForm = () => {
   const [taxRate, setTaxRate] = useState("16");
   const [notes, setNotes] = useState("");
   const [color, setColor] = useState(THEME_COLORS[0].value);
+  const [backgroundColor, setBackgroundColor] = useState(BACKGROUND_COLORS[0].value);
   const [lineItems, setLineItems] = useState<LineItem[]>([emptyLineItem()]);
 
   const token = () => localStorage.getItem("admin_token");
@@ -90,6 +102,7 @@ const AdminDocumentForm = () => {
         setTaxRate(String(doc.taxRate ?? 16));
         setNotes(doc.notes || "");
         setColor(doc.color || THEME_COLORS[0].value);
+        setBackgroundColor(doc.backgroundColor || BACKGROUND_COLORS[0].value);
         setLineItems(
           (doc.lineItems || []).map((item: { description: string; quantity: number; unitPrice: number }) => ({
             description: item.description,
@@ -160,6 +173,7 @@ const AdminDocumentForm = () => {
         taxRate: rate,
         notes: notes || undefined,
         color,
+        backgroundColor,
         lineItems: validItems.map((item) => ({
           description: item.description,
           quantity: Number(item.quantity) || 0,
@@ -319,6 +333,39 @@ const AdminDocumentForm = () => {
                       aria-label="Custom colour"
                     />
                     <span className="text-sm text-muted-foreground font-mono">{color}</span>
+                  </div>
+                </div>
+
+                <div className="mt-6 pt-6 border-t">
+                  <Label>Page Background Colour</Label>
+                  <p className="text-sm text-muted-foreground mt-0.5 mb-3">
+                    The document's page background — kept light so the black body text stays readable.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    {BACKGROUND_COLORS.map((swatch) => (
+                      <button
+                        key={swatch.value}
+                        type="button"
+                        title={swatch.name}
+                        onClick={() => setBackgroundColor(swatch.value)}
+                        className="w-9 h-9 rounded-full border border-border flex items-center justify-center transition-transform hover:scale-110"
+                        style={{ backgroundColor: swatch.value }}
+                      >
+                        {backgroundColor.toLowerCase() === swatch.value.toLowerCase() && (
+                          <Check className="h-4 w-4 text-foreground" />
+                        )}
+                      </button>
+                    ))}
+                    <div className="flex items-center gap-2 ml-2 pl-2 border-l">
+                      <input
+                        type="color"
+                        value={backgroundColor}
+                        onChange={(e) => setBackgroundColor(e.target.value)}
+                        className="w-9 h-9 rounded-md border cursor-pointer bg-transparent"
+                        aria-label="Custom background colour"
+                      />
+                      <span className="text-sm text-muted-foreground font-mono">{backgroundColor}</span>
+                    </div>
                   </div>
                 </div>
               </CardContent>

@@ -58,6 +58,7 @@ function serializeDocument(row) {
 
 const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
 const DEFAULT_DOCUMENT_COLOR = "#3182ed";
+const DEFAULT_BACKGROUND_COLOR = "#ffffff";
 
 // Validates + normalizes a create/edit request body. For edits, `existing`
 // (the current DB row, already serialized) supplies defaults for anything
@@ -66,7 +67,7 @@ function buildDocumentFields(body, existing = null) {
   const merged = existing ? { ...existing, ...body } : body;
   const { type, clientName, clientEmail, clientPhone, clientAddress,
     issueDate, dueDate, validUntil, paymentMethod, relatedInvoiceNumber,
-    lineItems, taxRate, notes, color } = merged;
+    lineItems, taxRate, notes, color, backgroundColor } = merged;
 
   if (!DOCUMENT_TYPES.includes(type)) {
     return { error: "Invalid document type" };
@@ -83,6 +84,7 @@ function buildDocumentFields(body, existing = null) {
     }
   }
   const resolvedColor = color && HEX_COLOR_RE.test(color) ? color : DEFAULT_DOCUMENT_COLOR;
+  const resolvedBackgroundColor = backgroundColor && HEX_COLOR_RE.test(backgroundColor) ? backgroundColor : DEFAULT_BACKGROUND_COLOR;
 
   const cleanLineItems = lineItems.map((item) => ({
     description: clean(String(item.description)),
@@ -111,6 +113,7 @@ function buildDocumentFields(body, existing = null) {
       total,
       notes: clean(notes) || null,
       color: resolvedColor,
+      backgroundColor: resolvedBackgroundColor,
     },
   };
 }
@@ -512,8 +515,8 @@ app.post("/api/admin/documents", jwtAuth, (req, res) => {
       INSERT INTO documents (
         type, number, status, clientName, clientEmail, clientPhone, clientAddress,
         issueDate, dueDate, validUntil, paymentMethod, relatedInvoiceNumber,
-        lineItems, subtotal, taxRate, taxAmount, total, notes, color
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        lineItems, subtotal, taxRate, taxAmount, total, notes, color, backgroundColor
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     const result = stmt.run(
       fields.type,
@@ -534,7 +537,8 @@ app.post("/api/admin/documents", jwtAuth, (req, res) => {
       fields.taxAmount,
       fields.total,
       fields.notes,
-      fields.color
+      fields.color,
+      fields.backgroundColor
     );
 
     const record = db.prepare("SELECT * FROM documents WHERE id = ?").get(result.lastInsertRowid);
@@ -604,7 +608,7 @@ app.patch("/api/admin/documents/:id", jwtAuth, (req, res) => {
         type = ?, status = ?, clientName = ?, clientEmail = ?, clientPhone = ?,
         clientAddress = ?, issueDate = ?, dueDate = ?, validUntil = ?,
         paymentMethod = ?, relatedInvoiceNumber = ?, lineItems = ?, subtotal = ?,
-        taxRate = ?, taxAmount = ?, total = ?, notes = ?, color = ?
+        taxRate = ?, taxAmount = ?, total = ?, notes = ?, color = ?, backgroundColor = ?
       WHERE id = ?
     `).run(
       fields.type,
@@ -625,6 +629,7 @@ app.patch("/api/admin/documents/:id", jwtAuth, (req, res) => {
       fields.total,
       fields.notes,
       fields.color,
+      fields.backgroundColor,
       id
     );
 
@@ -647,6 +652,7 @@ app.get("/api/admin/documents/:id/pdf", jwtAuth, async (req, res) => {
     if (!row) return res.status(404).json({ error: "Not found" });
     const record = serializeDocument(row);
     const themeColor = HEX_COLOR_RE.test(record.color) ? record.color : DEFAULT_DOCUMENT_COLOR;
+    const pageBackgroundColor = HEX_COLOR_RE.test(record.backgroundColor) ? record.backgroundColor : DEFAULT_BACKGROUND_COLOR;
     const isReceipt = record.type === "receipt";
 
     // QR stays plain black/white regardless of theme — colour tinting a QR
@@ -661,6 +667,18 @@ app.get("/api/admin/documents/:id/pdf", jwtAuth, async (req, res) => {
     const margin = isReceipt ? 30 : 50;
     const doc = new PDFDocument({ margin, size: isReceipt ? "A5" : "A4" });
     doc.pipe(res);
+
+    // Page background fill (defaults to white). .fill() also sets the
+    // current fillColor as a side effect, so it must be reset to black
+    // afterward or all subsequent text would render invisibly. Registered
+    // on 'pageAdded' too, so an overflow page (long line-item lists) gets
+    // the same background instead of falling back to white.
+    const paintPageBackground = () => {
+      doc.rect(0, 0, doc.page.width, doc.page.height).fill(pageBackgroundColor);
+      doc.fillColor("black");
+    };
+    paintPageBackground();
+    doc.on("pageAdded", paintPageBackground);
 
     const pageWidth = doc.page.width;
     const contentWidth = pageWidth - margin * 2;

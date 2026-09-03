@@ -67,6 +67,7 @@ db.prepare(`
     total REAL NOT NULL,
     notes TEXT,
     color TEXT NOT NULL DEFAULT '#3182ed',
+    backgroundColor TEXT NOT NULL DEFAULT '#ffffff',
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
   )
 `).run();
@@ -78,6 +79,9 @@ db.prepare("UPDATE documents SET status = 'open' WHERE status = 'draft'").run();
 const documentColumns = db.prepare("PRAGMA table_info(documents)").all();
 if (!documentColumns.some((c) => c.name === "color")) {
   db.prepare("ALTER TABLE documents ADD COLUMN color TEXT NOT NULL DEFAULT '#3182ed'").run();
+}
+if (!documentColumns.some((c) => c.name === "backgroundColor")) {
+  db.prepare("ALTER TABLE documents ADD COLUMN backgroundColor TEXT NOT NULL DEFAULT '#ffffff'").run();
 }
 
 export default db;
