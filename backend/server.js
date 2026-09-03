@@ -56,6 +56,65 @@ function serializeDocument(row) {
   return { ...row, lineItems: JSON.parse(row.lineItems) };
 }
 
+const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
+const DEFAULT_DOCUMENT_COLOR = "#3182ed";
+
+// Validates + normalizes a create/edit request body. For edits, `existing`
+// (the current DB row, already serialized) supplies defaults for anything
+// not present in `body`, so a partial PATCH doesn't wipe unrelated fields.
+function buildDocumentFields(body, existing = null) {
+  const merged = existing ? { ...existing, ...body } : body;
+  const { type, clientName, clientEmail, clientPhone, clientAddress,
+    issueDate, dueDate, validUntil, paymentMethod, relatedInvoiceNumber,
+    lineItems, taxRate, notes, color } = merged;
+
+  if (!DOCUMENT_TYPES.includes(type)) {
+    return { error: "Invalid document type" };
+  }
+  if (!clientName || typeof clientName !== "string") {
+    return { error: "Client name is required" };
+  }
+  if (!Array.isArray(lineItems) || lineItems.length === 0) {
+    return { error: "At least one line item is required" };
+  }
+  for (const item of lineItems) {
+    if (!item.description || !(Number(item.quantity) > 0) || !(Number(item.unitPrice) >= 0)) {
+      return { error: "Each line item needs a description, a positive quantity, and a unit price" };
+    }
+  }
+  const resolvedColor = color && HEX_COLOR_RE.test(color) ? color : DEFAULT_DOCUMENT_COLOR;
+
+  const cleanLineItems = lineItems.map((item) => ({
+    description: clean(String(item.description)),
+    quantity: Number(item.quantity),
+    unitPrice: Number(item.unitPrice),
+  }));
+  const rate = Number(taxRate) || 0;
+  const { subtotal, taxAmount, total } = computeTotals(cleanLineItems, rate);
+
+  return {
+    fields: {
+      type,
+      clientName: clean(clientName),
+      clientEmail: clean(clientEmail) || null,
+      clientPhone: clean(clientPhone) || null,
+      clientAddress: clean(clientAddress) || null,
+      issueDate: issueDate || new Date().toISOString().slice(0, 10),
+      dueDate: dueDate || null,
+      validUntil: validUntil || null,
+      paymentMethod: paymentMethod || null,
+      relatedInvoiceNumber: relatedInvoiceNumber || null,
+      lineItems: cleanLineItems,
+      subtotal,
+      taxRate: rate,
+      taxAmount,
+      total,
+      notes: clean(notes) || null,
+      color: resolvedColor,
+    },
+  };
+}
+
 const app = express();
 app.disable('x-powered-by');
 app.use(express.json({ limit: '100kb' }));
@@ -445,60 +504,37 @@ app.get("/api/admin/messages/export/excel", jwtAuth, async (req, res) => {
 // Create a quote, invoice, or receipt
 app.post("/api/admin/documents", jwtAuth, (req, res) => {
   try {
-    const { type, clientName, clientEmail, clientPhone, clientAddress,
-      issueDate, dueDate, validUntil, paymentMethod, relatedInvoiceNumber,
-      lineItems, taxRate, notes } = req.body;
+    const { error, fields } = buildDocumentFields(req.body);
+    if (error) return res.status(400).json({ error });
 
-    if (!DOCUMENT_TYPES.includes(type)) {
-      return res.status(400).json({ error: "Invalid document type" });
-    }
-    if (!clientName || typeof clientName !== "string") {
-      return res.status(400).json({ error: "Client name is required" });
-    }
-    if (!Array.isArray(lineItems) || lineItems.length === 0) {
-      return res.status(400).json({ error: "At least one line item is required" });
-    }
-    for (const item of lineItems) {
-      if (!item.description || !(Number(item.quantity) > 0) || !(Number(item.unitPrice) >= 0)) {
-        return res.status(400).json({ error: "Each line item needs a description, a positive quantity, and a unit price" });
-      }
-    }
-
-    const cleanLineItems = lineItems.map((item) => ({
-      description: clean(String(item.description)),
-      quantity: Number(item.quantity),
-      unitPrice: Number(item.unitPrice),
-    }));
-    const rate = Number(taxRate) || 0;
-    const { subtotal, taxAmount, total } = computeTotals(cleanLineItems, rate);
-    const number = generateDocumentNumber(type);
-
+    const number = generateDocumentNumber(fields.type);
     const stmt = db.prepare(`
       INSERT INTO documents (
         type, number, status, clientName, clientEmail, clientPhone, clientAddress,
         issueDate, dueDate, validUntil, paymentMethod, relatedInvoiceNumber,
-        lineItems, subtotal, taxRate, taxAmount, total, notes
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        lineItems, subtotal, taxRate, taxAmount, total, notes, color
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     const result = stmt.run(
-      type,
+      fields.type,
       number,
       "open",
-      clean(clientName),
-      clean(clientEmail) || null,
-      clean(clientPhone) || null,
-      clean(clientAddress) || null,
-      issueDate || new Date().toISOString().slice(0, 10),
-      dueDate || null,
-      validUntil || null,
-      paymentMethod || null,
-      relatedInvoiceNumber || null,
-      JSON.stringify(cleanLineItems),
-      subtotal,
-      rate,
-      taxAmount,
-      total,
-      clean(notes) || null
+      fields.clientName,
+      fields.clientEmail,
+      fields.clientPhone,
+      fields.clientAddress,
+      fields.issueDate,
+      fields.dueDate,
+      fields.validUntil,
+      fields.paymentMethod,
+      fields.relatedInvoiceNumber,
+      JSON.stringify(fields.lineItems),
+      fields.subtotal,
+      fields.taxRate,
+      fields.taxAmount,
+      fields.total,
+      fields.notes,
+      fields.color
     );
 
     const record = db.prepare("SELECT * FROM documents WHERE id = ?").get(result.lastInsertRowid);
@@ -535,18 +571,64 @@ app.get("/api/admin/documents/:id", jwtAuth, (req, res) => {
   }
 });
 
-// Update a document's status (open -> sent -> paid/accepted, or void)
+// Update a document — either just its status (open -> sent -> paid/accepted,
+// or void), or a full edit of its content (client info, line items, color,
+// etc). A request may include `status`, edit fields, or both.
 app.patch("/api/admin/documents/:id", jwtAuth, (req, res) => {
   try {
     const id = Number(req.params.id);
-    const { status } = req.body;
-    const allowedStatuses = ["open", "sent", "accepted", "paid", "void"];
-    if (!allowedStatuses.includes(status)) {
-      return res.status(400).json({ error: "Invalid status" });
+    const existingRow = db.prepare("SELECT * FROM documents WHERE id = ?").get(id);
+    if (!existingRow) return res.status(404).json({ error: "Not found" });
+    const existing = serializeDocument(existingRow);
+
+    const { status, ...editBody } = req.body;
+    let nextStatus = existing.status;
+    if (status !== undefined) {
+      const allowedStatuses = ["open", "sent", "accepted", "paid", "void"];
+      if (!allowedStatuses.includes(status)) {
+        return res.status(400).json({ error: "Invalid status" });
+      }
+      nextStatus = status;
     }
-    db.prepare("UPDATE documents SET status = ? WHERE id = ?").run(status, id);
+
+    const isContentEdit = Object.keys(editBody).length > 0;
+    let fields = existing;
+    if (isContentEdit) {
+      const result = buildDocumentFields(editBody, existing);
+      if (result.error) return res.status(400).json({ error: result.error });
+      fields = result.fields;
+    }
+
+    db.prepare(`
+      UPDATE documents SET
+        type = ?, status = ?, clientName = ?, clientEmail = ?, clientPhone = ?,
+        clientAddress = ?, issueDate = ?, dueDate = ?, validUntil = ?,
+        paymentMethod = ?, relatedInvoiceNumber = ?, lineItems = ?, subtotal = ?,
+        taxRate = ?, taxAmount = ?, total = ?, notes = ?, color = ?
+      WHERE id = ?
+    `).run(
+      fields.type,
+      nextStatus,
+      fields.clientName,
+      fields.clientEmail,
+      fields.clientPhone,
+      fields.clientAddress,
+      fields.issueDate,
+      fields.dueDate,
+      fields.validUntil,
+      fields.paymentMethod,
+      fields.relatedInvoiceNumber,
+      isContentEdit ? JSON.stringify(fields.lineItems) : JSON.stringify(existing.lineItems),
+      fields.subtotal,
+      fields.taxRate,
+      fields.taxAmount,
+      fields.total,
+      fields.notes,
+      fields.color,
+      id
+    );
+
     const row = db.prepare("SELECT * FROM documents WHERE id = ?").get(id);
-    if (!row) return res.status(404).json({ error: "Not found" });
     res.json({ document: serializeDocument(row) });
   } catch (err) {
     console.error(err);
@@ -555,36 +637,50 @@ app.patch("/api/admin/documents/:id", jwtAuth, (req, res) => {
 });
 
 // Generate the branded PDF for a quote/invoice/receipt, with a QR code
-// linking to its public verification page
+// linking to its public verification page. Receipts render on A5 (they're
+// short, single-payment documents); quotes/invoices use A4. All positions
+// are computed from the page's actual width/margin rather than fixed A4
+// pixel values, since A5 is considerably narrower.
 app.get("/api/admin/documents/:id/pdf", jwtAuth, async (req, res) => {
   try {
     const row = db.prepare("SELECT * FROM documents WHERE id = ?").get(Number(req.params.id));
     if (!row) return res.status(404).json({ error: "Not found" });
     const record = serializeDocument(row);
+    const themeColor = HEX_COLOR_RE.test(record.color) ? record.color : DEFAULT_DOCUMENT_COLOR;
+    const isReceipt = record.type === "receipt";
 
     const verifyUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/verify/${record.number}`;
-    const qrBuffer = await QRCode.toBuffer(verifyUrl, { width: 200, margin: 1 });
+    const qrBuffer = await QRCode.toBuffer(verifyUrl, { width: 200, margin: 1, color: { dark: themeColor } });
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename="${record.number}.pdf"`);
 
-    const doc = new PDFDocument({ margin: 50, size: "A4" });
+    const margin = isReceipt ? 30 : 50;
+    const doc = new PDFDocument({ margin, size: isReceipt ? "A5" : "A4" });
     doc.pipe(res);
+
+    const pageWidth = doc.page.width;
+    const contentWidth = pageWidth - margin * 2;
+    const rightEdge = pageWidth - margin;
+    const logoWidth = isReceipt ? 50 : 80;
+    const qrWidth = isReceipt ? 55 : 80;
+    const gap = isReceipt ? 8 : 10;
+    const letterheadX = margin + logoWidth + gap;
+    const qrX = rightEdge - qrWidth;
+    const letterheadWidth = qrX - gap - letterheadX;
 
     // Letterhead — text width is capped so a long line wraps instead of
     // running into the QR code's space (drawn afterward, so it would
     // otherwise paint over the tail end rather than actually overlapping).
     // Each line's y is computed from the actual (possibly wrapped) height
     // of the one before it, rather than guessed fixed offsets.
-    doc.image(LOGO_PATH_UI, 50, 35, { width: 80 });
-    const letterheadX = 145;
-    const letterheadWidth = 290;
-    let letterheadY = 42;
-    doc.font("Helvetica-Bold").fontSize(16);
+    doc.image(LOGO_PATH_UI, margin, margin - 5, { width: logoWidth });
+    let letterheadY = margin + 2;
+    doc.fillColor("black").font("Helvetica-Bold").fontSize(isReceipt ? 12 : 16);
     doc.text(COMPANY.name, letterheadX, letterheadY, { width: letterheadWidth });
     letterheadY += doc.heightOfString(COMPANY.name, { width: letterheadWidth }) + 4;
 
-    doc.font("Helvetica").fontSize(9);
+    doc.font("Helvetica").fontSize(isReceipt ? 7 : 9);
     doc.text(COMPANY.address, letterheadX, letterheadY, { width: letterheadWidth });
     letterheadY += doc.heightOfString(COMPANY.address, { width: letterheadWidth }) + 2;
 
@@ -592,96 +688,122 @@ app.get("/api/admin/documents/:id/pdf", jwtAuth, async (req, res) => {
     letterheadY += doc.heightOfString(COMPANY.contact, { width: letterheadWidth }) + 2;
 
     doc.text(`KRA PIN: ${COMPANY.kraPin}`, letterheadX, letterheadY, { width: letterheadWidth });
+    letterheadY += doc.heightOfString(`KRA PIN: ${COMPANY.kraPin}`, { width: letterheadWidth });
 
-    doc.image(qrBuffer, doc.page.width - 130, 40, { width: 80 });
-    doc.font("Helvetica").fontSize(7).text("Scan to verify", doc.page.width - 130, 122, { width: 80, align: "center" });
+    doc.image(qrBuffer, qrX, margin - 5, { width: qrWidth });
+    doc.font("Helvetica").fontSize(6).text("Scan to verify", qrX, margin - 5 + qrWidth + 2, { width: qrWidth, align: "center" });
 
-    doc.moveTo(50, 150).lineTo(doc.page.width - 50, 150).stroke();
+    const headerBottom = Math.max(letterheadY, margin - 5 + qrWidth + 12) + 8;
+    doc.strokeColor(themeColor).lineWidth(1.5).moveTo(margin, headerBottom).lineTo(rightEdge, headerBottom).stroke();
+    doc.strokeColor("black").lineWidth(1);
 
     // Title + meta
-    doc.font("Helvetica-Bold").fontSize(18).text(DOCUMENT_LABELS[record.type], 50, 165);
-    doc.font("Helvetica").fontSize(10).text(`#${record.number}`, 50, 188);
-    doc.text(`Status: ${record.status.toUpperCase()}`, doc.page.width - 200, 188, { width: 150, align: "right" });
+    let y = headerBottom + (isReceipt ? 12 : 15);
+    doc.fillColor(themeColor).font("Helvetica-Bold").fontSize(isReceipt ? 15 : 18).text(DOCUMENT_LABELS[record.type], margin, y);
+    doc.fillColor("black");
+    y += isReceipt ? 20 : 23;
+    doc.font("Helvetica").fontSize(isReceipt ? 8 : 10).text(`#${record.number}`, margin, y);
+    doc.text(`Status: ${record.status.toUpperCase()}`, margin, y, { width: contentWidth, align: "right" });
 
-    let metaY = 210;
-    doc.text(`Issue Date: ${record.issueDate}`, 50, metaY);
+    y += isReceipt ? 16 : 20;
+    doc.text(`Issue Date: ${record.issueDate}`, margin, y);
+    const metaSecondColX = margin + contentWidth * 0.45;
     if (record.type === "invoice" && record.dueDate) {
-      doc.text(`Due Date: ${record.dueDate}`, 250, metaY);
+      doc.text(`Due Date: ${record.dueDate}`, metaSecondColX, y);
     }
     if (record.type === "quote" && record.validUntil) {
-      doc.text(`Valid Until: ${record.validUntil}`, 250, metaY);
+      doc.text(`Valid Until: ${record.validUntil}`, metaSecondColX, y);
     }
     if (record.type === "receipt") {
-      if (record.paymentMethod) doc.text(`Payment Method: ${record.paymentMethod}`, 250, metaY);
+      if (record.paymentMethod) doc.text(`Paid via: ${record.paymentMethod}`, metaSecondColX, y);
       if (record.relatedInvoiceNumber) {
-        metaY += 15;
-        doc.text(`For Invoice: ${record.relatedInvoiceNumber}`, 50, metaY);
+        y += isReceipt ? 13 : 15;
+        doc.text(`For Invoice: ${record.relatedInvoiceNumber}`, margin, y);
       }
     }
 
     // Bill To
-    let billY = metaY + 30;
-    doc.font("Helvetica-Bold").fontSize(11).text("Bill To", 50, billY);
-    doc.font("Helvetica").fontSize(10);
-    billY += 16;
-    doc.text(record.clientName, 50, billY);
-    if (record.clientEmail) { billY += 14; doc.text(record.clientEmail, 50, billY); }
-    if (record.clientPhone) { billY += 14; doc.text(record.clientPhone, 50, billY); }
-    if (record.clientAddress) { billY += 14; doc.text(record.clientAddress, 50, billY, { width: 300 }); }
+    y += isReceipt ? 20 : 30;
+    doc.font("Helvetica-Bold").fontSize(isReceipt ? 9 : 11).text(isReceipt ? "Received From" : "Bill To", margin, y);
+    doc.font("Helvetica").fontSize(isReceipt ? 8 : 10);
+    y += isReceipt ? 13 : 16;
+    doc.text(record.clientName, margin, y);
+    const lineGap = isReceipt ? 11 : 14;
+    if (record.clientEmail) { y += lineGap; doc.text(record.clientEmail, margin, y); }
+    if (record.clientPhone) { y += lineGap; doc.text(record.clientPhone, margin, y); }
+    if (record.clientAddress) { y += lineGap; doc.text(record.clientAddress, margin, y, { width: contentWidth * 0.7 }); }
 
-    // Line items table
-    let y = billY + 35;
+    // Line items table — column widths are proportions of content width so
+    // they scale correctly between A4 and A5.
+    y += isReceipt ? 18 : 28;
+    const fontSize = isReceipt ? 8 : 9;
+    const descW = contentWidth * 0.42;
+    const qtyW = contentWidth * 0.13;
+    const priceW = contentWidth * 0.2;
+    const amountW = contentWidth - descW - qtyW - priceW;
     const cols = [
-      { label: "Description", x: 50, width: 250 },
-      { label: "Qty", x: 300, width: 50, align: "right" },
-      { label: "Unit Price", x: 360, width: 90, align: "right" },
-      { label: "Amount", x: 455, width: 95, align: "right" },
+      { label: "Description", x: margin, width: descW },
+      { label: "Qty", x: margin + descW, width: qtyW, align: "right" },
+      { label: "Unit Price", x: margin + descW + qtyW, width: priceW, align: "right" },
+      { label: "Amount", x: margin + descW + qtyW + priceW, width: amountW, align: "right" },
     ];
-    doc.font("Helvetica-Bold").fontSize(9);
+    doc.font("Helvetica-Bold").fontSize(fontSize).fillColor(themeColor);
     cols.forEach((c) => doc.text(c.label, c.x, y, { width: c.width, align: c.align }));
-    doc.moveTo(50, y + 14).lineTo(doc.page.width - 50, y + 14).stroke();
-    y += 22;
+    doc.fillColor("black");
+    doc.strokeColor(themeColor).moveTo(margin, y + 13).lineTo(rightEdge, y + 13).stroke();
+    doc.strokeColor("black");
+    y += isReceipt ? 18 : 22;
 
-    doc.font("Helvetica").fontSize(9);
+    doc.font("Helvetica").fontSize(fontSize);
+    const rowHeight = isReceipt ? 15 : 18;
     record.lineItems.forEach((item) => {
-      if (y > doc.page.height - 150) {
+      if (y > doc.page.height - (isReceipt ? 90 : 150)) {
         doc.addPage();
-        y = 50;
+        y = margin;
       }
       const amount = item.quantity * item.unitPrice;
       doc.text(item.description, cols[0].x, y, { width: cols[0].width });
       doc.text(String(item.quantity), cols[1].x, y, { width: cols[1].width, align: "right" });
       doc.text(item.unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2 }), cols[2].x, y, { width: cols[2].width, align: "right" });
       doc.text(amount.toLocaleString(undefined, { minimumFractionDigits: 2 }), cols[3].x, y, { width: cols[3].width, align: "right" });
-      y += 18;
+      y += rowHeight;
     });
 
-    y += 10;
-    doc.moveTo(300, y).lineTo(doc.page.width - 50, y).stroke();
-    y += 10;
+    y += isReceipt ? 6 : 10;
+    const totalsLabelX = margin + contentWidth * 0.55;
+    doc.moveTo(totalsLabelX, y).lineTo(rightEdge, y).stroke();
+    y += isReceipt ? 6 : 10;
 
     const totalsRow = (label, value, bold = false) => {
-      doc.font(bold ? "Helvetica-Bold" : "Helvetica").fontSize(bold ? 11 : 10);
-      doc.text(label, 300, y, { width: 155, align: "right" });
-      doc.text(`KES ${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 455, y, { width: 95, align: "right" });
-      y += bold ? 20 : 16;
+      const size = bold ? fontSize + 2 : fontSize + 1;
+      doc.font(bold ? "Helvetica-Bold" : "Helvetica").fontSize(size);
+      if (bold) doc.fillColor(themeColor);
+      doc.text(label, totalsLabelX, y, { width: (rightEdge - totalsLabelX) * 0.55, align: "right" });
+      doc.text(`KES ${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, totalsLabelX + (rightEdge - totalsLabelX) * 0.55, y, { width: (rightEdge - totalsLabelX) * 0.45, align: "right" });
+      if (bold) doc.fillColor("black");
+      y += bold ? (isReceipt ? 16 : 20) : (isReceipt ? 13 : 16);
     };
     totalsRow("Subtotal", record.subtotal);
     if (record.taxRate > 0) totalsRow(`Tax (${record.taxRate}%)`, record.taxAmount);
     totalsRow("TOTAL", record.total, true);
 
     if (record.notes) {
-      y += 20;
-      doc.font("Helvetica-Bold").fontSize(10).text("Notes", 50, y);
-      y += 15;
-      doc.font("Helvetica").fontSize(9).text(record.notes, 50, y, { width: doc.page.width - 100 });
+      y += isReceipt ? 12 : 20;
+      doc.font("Helvetica-Bold").fontSize(fontSize + 1).text("Notes", margin, y);
+      y += isReceipt ? 11 : 15;
+      doc.font("Helvetica").fontSize(fontSize).text(record.notes, margin, y, { width: contentWidth });
     }
 
-    doc.font("Helvetica").fontSize(8).text(
+    // Positioned relative to where the content actually ended, rather than
+    // pinned to the page bottom — anchoring near the bottom margin on the
+    // shorter A5 page was enough to trip pdfkit's own auto-pagination and
+    // silently produce a blank trailing page.
+    y += isReceipt ? 20 : 30;
+    doc.font("Helvetica").fontSize(isReceipt ? 7 : 8).text(
       "Thank you for your business.",
-      50,
-      doc.page.height - 60,
-      { width: doc.page.width - 100, align: "center" }
+      margin,
+      y,
+      { width: contentWidth, align: "center" }
     );
 
     doc.end();

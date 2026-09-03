@@ -39,6 +39,7 @@ const App = () => (
           <Route path="/admin/messages" element={<AdminDashboard />} />
           <Route path="/admin/documents" element={<AdminDocuments />} />
           <Route path="/admin/documents/new" element={<AdminDocumentForm />} />
+          <Route path="/admin/documents/:id/edit" element={<AdminDocumentForm />} />
           <Route path="/verify/:number" element={<VerifyDocument />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

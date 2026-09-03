@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/ui/footer";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2, Loader2, ArrowLeft } from "lucide-react";
+import { Plus, Trash2, Loader2, ArrowLeft, Check } from "lucide-react";
 
 type DocumentType = "quote" | "invoice" | "receipt";
 
@@ -27,10 +27,22 @@ type LineItem = {
 
 const emptyLineItem = (): LineItem => ({ description: "", quantity: "1", unitPrice: "" });
 
+const THEME_COLORS = [
+  { name: "Blue", value: "#3182ed" },
+  { name: "Charcoal", value: "#1f2937" },
+  { name: "Green", value: "#15803d" },
+  { name: "Maroon", value: "#991b1b" },
+  { name: "Purple", value: "#6d28d9" },
+  { name: "Teal", value: "#0f766e" },
+];
+
 const AdminDocumentForm = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(isEditMode);
 
   const [type, setType] = useState<DocumentType>("quote");
   const [clientName, setClientName] = useState("");
@@ -44,7 +56,56 @@ const AdminDocumentForm = () => {
   const [relatedInvoiceNumber, setRelatedInvoiceNumber] = useState("");
   const [taxRate, setTaxRate] = useState("16");
   const [notes, setNotes] = useState("");
+  const [color, setColor] = useState(THEME_COLORS[0].value);
   const [lineItems, setLineItems] = useState<LineItem[]>([emptyLineItem()]);
+
+  const token = () => localStorage.getItem("admin_token");
+  const apiBase = () => import.meta.env.VITE_API_URL || "";
+
+  useEffect(() => {
+    if (!isEditMode) return;
+    const t = token();
+    if (!t) {
+      navigate("/admin");
+      return;
+    }
+    (async () => {
+      try {
+        const res = await fetch(`${apiBase()}/api/admin/documents/${id}`, {
+          headers: { Authorization: `Bearer ${t}` },
+        });
+        if (!res.ok) throw new Error("Could not load document");
+        const data = await res.json();
+        const doc = data.document;
+        setType(doc.type);
+        setClientName(doc.clientName || "");
+        setClientEmail(doc.clientEmail || "");
+        setClientPhone(doc.clientPhone || "");
+        setClientAddress(doc.clientAddress || "");
+        setIssueDate(doc.issueDate || new Date().toISOString().slice(0, 10));
+        setDueDate(doc.dueDate || "");
+        setValidUntil(doc.validUntil || "");
+        setPaymentMethod(doc.paymentMethod || "");
+        setRelatedInvoiceNumber(doc.relatedInvoiceNumber || "");
+        setTaxRate(String(doc.taxRate ?? 16));
+        setNotes(doc.notes || "");
+        setColor(doc.color || THEME_COLORS[0].value);
+        setLineItems(
+          (doc.lineItems || []).map((item: { description: string; quantity: number; unitPrice: number }) => ({
+            description: item.description,
+            quantity: String(item.quantity),
+            unitPrice: String(item.unitPrice),
+          }))
+        );
+      } catch (err) {
+        console.error(err);
+        toast({ title: "Could not load document", variant: "destructive" });
+        navigate("/admin/documents");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [id]);
 
   const updateLineItem = (index: number, field: keyof LineItem, value: string) => {
     setLineItems((prev) => prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
@@ -67,8 +128,8 @@ const AdminDocumentForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = localStorage.getItem("admin_token");
-    if (!token) {
+    const t = token();
+    if (!t) {
       navigate("/admin");
       return;
     }
@@ -85,46 +146,51 @@ const AdminDocumentForm = () => {
 
     setSubmitting(true);
     try {
-      const apiBase = import.meta.env.VITE_API_URL || "";
-      const res = await fetch(`${apiBase}/api/admin/documents`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type,
-          clientName,
-          clientEmail: clientEmail || undefined,
-          clientPhone: clientPhone || undefined,
-          clientAddress: clientAddress || undefined,
-          issueDate,
-          dueDate: type === "invoice" ? dueDate || undefined : undefined,
-          validUntil: type === "quote" ? validUntil || undefined : undefined,
-          paymentMethod: type === "receipt" ? paymentMethod || undefined : undefined,
-          relatedInvoiceNumber: type === "receipt" ? relatedInvoiceNumber || undefined : undefined,
-          taxRate: rate,
-          notes: notes || undefined,
-          lineItems: validItems.map((item) => ({
-            description: item.description,
-            quantity: Number(item.quantity) || 0,
-            unitPrice: Number(item.unitPrice) || 0,
-          })),
-        }),
-      });
+      const payload = {
+        type,
+        clientName,
+        clientEmail: clientEmail || undefined,
+        clientPhone: clientPhone || undefined,
+        clientAddress: clientAddress || undefined,
+        issueDate,
+        dueDate: type === "invoice" ? dueDate || undefined : undefined,
+        validUntil: type === "quote" ? validUntil || undefined : undefined,
+        paymentMethod: type === "receipt" ? paymentMethod || undefined : undefined,
+        relatedInvoiceNumber: type === "receipt" ? relatedInvoiceNumber || undefined : undefined,
+        taxRate: rate,
+        notes: notes || undefined,
+        color,
+        lineItems: validItems.map((item) => ({
+          description: item.description,
+          quantity: Number(item.quantity) || 0,
+          unitPrice: Number(item.unitPrice) || 0,
+        })),
+      };
+
+      const res = await fetch(
+        isEditMode ? `${apiBase()}/api/admin/documents/${id}` : `${apiBase()}/api/admin/documents`,
+        {
+          method: isEditMode ? "PATCH" : "POST",
+          headers: { Authorization: `Bearer ${t}`, "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Failed to create document");
+        throw new Error(err.error || `Failed to ${isEditMode ? "save" : "create"} document`);
       }
 
       const data = await res.json();
       toast({
-        title: `${type[0].toUpperCase()}${type.slice(1)} created`,
-        description: `${data.document.number} was created successfully.`,
+        title: `${type[0].toUpperCase()}${type.slice(1)} ${isEditMode ? "updated" : "created"}`,
+        description: `${data.document.number} was ${isEditMode ? "updated" : "created"} successfully.`,
       });
       navigate("/admin/documents");
     } catch (err) {
       console.error(err);
       toast({
-        title: "Could not create document",
+        title: `Could not ${isEditMode ? "save" : "create"} document`,
         description: err instanceof Error ? err.message : "Please try again.",
         variant: "destructive",
       });
@@ -132,6 +198,16 @@ const AdminDocumentForm = () => {
       setSubmitting(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="pt-24 pb-20 text-center text-muted-foreground">Loading...</main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -142,7 +218,7 @@ const AdminDocumentForm = () => {
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back to Documents
           </Link>
-          <h1 className="text-2xl font-bold mb-8">New Document</h1>
+          <h1 className="text-2xl font-bold mb-8">{isEditMode ? "Edit Document" : "New Document"}</h1>
 
           <form onSubmit={handleSubmit} className="space-y-8">
             <Card>
@@ -209,6 +285,41 @@ const AdminDocumentForm = () => {
                       </div>
                     </>
                   )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <Label>PDF Theme Colour</Label>
+                <p className="text-sm text-muted-foreground mt-0.5 mb-3">
+                  Applied to the title, table header, and totals on the downloaded PDF{type === "receipt" ? " (A5)" : ""}.
+                </p>
+                <div className="flex flex-wrap items-center gap-3">
+                  {THEME_COLORS.map((swatch) => (
+                    <button
+                      key={swatch.value}
+                      type="button"
+                      title={swatch.name}
+                      onClick={() => setColor(swatch.value)}
+                      className="w-9 h-9 rounded-full flex items-center justify-center ring-offset-background transition-transform hover:scale-110"
+                      style={{ backgroundColor: swatch.value }}
+                    >
+                      {color.toLowerCase() === swatch.value.toLowerCase() && (
+                        <Check className="h-4 w-4 text-white" />
+                      )}
+                    </button>
+                  ))}
+                  <div className="flex items-center gap-2 ml-2 pl-2 border-l">
+                    <input
+                      type="color"
+                      value={color}
+                      onChange={(e) => setColor(e.target.value)}
+                      className="w-9 h-9 rounded-md border cursor-pointer bg-transparent"
+                      aria-label="Custom colour"
+                    />
+                    <span className="text-sm text-muted-foreground font-mono">{color}</span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -312,7 +423,7 @@ const AdminDocumentForm = () => {
               </Button>
               <Button type="submit" className="btn-tech" disabled={submitting}>
                 {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Create {type[0].toUpperCase()}{type.slice(1)}
+                {isEditMode ? "Save Changes" : `Create ${type[0].toUpperCase()}${type.slice(1)}`}
               </Button>
             </div>
           </form>

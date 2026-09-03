@@ -26,7 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Download, ChevronDown, Loader2 } from "lucide-react";
+import { Plus, Download, ChevronDown, Loader2, Pencil } from "lucide-react";
 
 type DocumentType = "quote" | "invoice" | "receipt";
 type DocumentStatus = "open" | "sent" | "accepted" | "paid" | "void";
@@ -251,7 +251,12 @@ const AdminDocuments = () => {
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right space-x-2">
+                        <Button variant="outline" size="sm" asChild>
+                          <Link to={`/admin/documents/${doc.id}/edit`} aria-label={`Edit ${doc.number}`}>
+                            <Pencil className="h-4 w-4" />
+                          </Link>
+                        </Button>
                         <Button
                           variant="outline"
                           size="sm"

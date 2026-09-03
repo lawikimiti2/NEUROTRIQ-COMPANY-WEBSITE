@@ -66,11 +66,18 @@ db.prepare(`
     taxAmount REAL NOT NULL DEFAULT 0,
     total REAL NOT NULL,
     notes TEXT,
+    color TEXT NOT NULL DEFAULT '#3182ed',
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
   )
 `).run();
 
 // Migration: the initial status value was renamed from "draft" to "open"
 db.prepare("UPDATE documents SET status = 'open' WHERE status = 'draft'").run();
+
+// Migration: add color column (PDF theme) for existing databases
+const documentColumns = db.prepare("PRAGMA table_info(documents)").all();
+if (!documentColumns.some((c) => c.name === "color")) {
+  db.prepare("ALTER TABLE documents ADD COLUMN color TEXT NOT NULL DEFAULT '#3182ed'").run();
+}
 
 export default db;
