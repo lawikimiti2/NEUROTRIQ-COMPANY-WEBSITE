@@ -649,8 +649,11 @@ app.get("/api/admin/documents/:id/pdf", jwtAuth, async (req, res) => {
     const themeColor = HEX_COLOR_RE.test(record.color) ? record.color : DEFAULT_DOCUMENT_COLOR;
     const isReceipt = record.type === "receipt";
 
+    // QR stays plain black/white regardless of theme — colour tinting a QR
+    // code risks contrast/scan-reliability issues, and the theme colour is
+    // meant to show up as background fills, not on the code or on text.
     const verifyUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/verify/${record.number}`;
-    const qrBuffer = await QRCode.toBuffer(verifyUrl, { width: 200, margin: 1, color: { dark: themeColor } });
+    const qrBuffer = await QRCode.toBuffer(verifyUrl, { width: 200, margin: 1 });
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename="${record.number}.pdf"`);
@@ -694,14 +697,18 @@ app.get("/api/admin/documents/:id/pdf", jwtAuth, async (req, res) => {
     doc.font("Helvetica").fontSize(6).text("Scan to verify", qrX, margin - 5 + qrWidth + 2, { width: qrWidth, align: "center" });
 
     const headerBottom = Math.max(letterheadY, margin - 5 + qrWidth + 12) + 8;
-    doc.strokeColor(themeColor).lineWidth(1.5).moveTo(margin, headerBottom).lineTo(rightEdge, headerBottom).stroke();
-    doc.strokeColor("black").lineWidth(1);
+    doc.strokeColor("#d1d5db").lineWidth(1).moveTo(margin, headerBottom).lineTo(rightEdge, headerBottom).stroke();
+    doc.strokeColor("black");
 
-    // Title + meta
+    // Title — a coloured banner with white text, rather than coloured text
+    // on the plain page background.
     let y = headerBottom + (isReceipt ? 12 : 15);
-    doc.fillColor(themeColor).font("Helvetica-Bold").fontSize(isReceipt ? 15 : 18).text(DOCUMENT_LABELS[record.type], margin, y);
+    const titleBandHeight = isReceipt ? 22 : 28;
+    doc.rect(margin, y - 5, contentWidth, titleBandHeight).fill(themeColor);
+    doc.fillColor("white").font("Helvetica-Bold").fontSize(isReceipt ? 15 : 18)
+      .text(DOCUMENT_LABELS[record.type], margin + 10, y, { width: contentWidth - 20 });
     doc.fillColor("black");
-    y += isReceipt ? 20 : 23;
+    y += titleBandHeight + (isReceipt ? 8 : 10);
     doc.font("Helvetica").fontSize(isReceipt ? 8 : 10).text(`#${record.number}`, margin, y);
     doc.text(`Status: ${record.status.toUpperCase()}`, margin, y, { width: contentWidth, align: "right" });
 
@@ -747,12 +754,12 @@ app.get("/api/admin/documents/:id/pdf", jwtAuth, async (req, res) => {
       { label: "Unit Price", x: margin + descW + qtyW, width: priceW, align: "right" },
       { label: "Amount", x: margin + descW + qtyW + priceW, width: amountW, align: "right" },
     ];
-    doc.font("Helvetica-Bold").fontSize(fontSize).fillColor(themeColor);
+    const headerRowHeight = isReceipt ? 16 : 20;
+    doc.rect(margin, y - 4, contentWidth, headerRowHeight).fill(themeColor);
+    doc.font("Helvetica-Bold").fontSize(fontSize).fillColor("white");
     cols.forEach((c) => doc.text(c.label, c.x, y, { width: c.width, align: c.align }));
     doc.fillColor("black");
-    doc.strokeColor(themeColor).moveTo(margin, y + 13).lineTo(rightEdge, y + 13).stroke();
-    doc.strokeColor("black");
-    y += isReceipt ? 18 : 22;
+    y += headerRowHeight + (isReceipt ? 6 : 8);
 
     doc.font("Helvetica").fontSize(fontSize);
     const rowHeight = isReceipt ? 15 : 18;
@@ -776,12 +783,16 @@ app.get("/api/admin/documents/:id/pdf", jwtAuth, async (req, res) => {
 
     const totalsRow = (label, value, bold = false) => {
       const size = bold ? fontSize + 2 : fontSize + 1;
+      const rowH = bold ? (isReceipt ? 18 : 22) : (isReceipt ? 13 : 16);
+      if (bold) {
+        doc.rect(totalsLabelX - 8, y - 4, rightEdge - totalsLabelX + 8, rowH).fill(themeColor);
+        doc.fillColor("white");
+      }
       doc.font(bold ? "Helvetica-Bold" : "Helvetica").fontSize(size);
-      if (bold) doc.fillColor(themeColor);
       doc.text(label, totalsLabelX, y, { width: (rightEdge - totalsLabelX) * 0.55, align: "right" });
       doc.text(`KES ${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, totalsLabelX + (rightEdge - totalsLabelX) * 0.55, y, { width: (rightEdge - totalsLabelX) * 0.45, align: "right" });
       if (bold) doc.fillColor("black");
-      y += bold ? (isReceipt ? 16 : 20) : (isReceipt ? 13 : 16);
+      y += rowH;
     };
     totalsRow("Subtotal", record.subtotal);
     if (record.taxRate > 0) totalsRow(`Tax (${record.taxRate}%)`, record.taxAmount);
