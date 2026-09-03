@@ -23,7 +23,7 @@ const LOGO_PATH = join(__dirname, "assets", "neurotriq_logo.png");
 const LOGO_PATH_UI = join(__dirname, "assets", "neurotriq_logo_ui.png");
 const COMPANY = {
   name: "NeuroTriQ Company Limited",
-  address: "Kins Arcade, Ground Floor, Ongata Rongai | P.O. Box 4983-00100 Nairobi, Kenya",
+  address: "Intrade Africa Place, Lavington | P.O. Box 4983-00100 Nairobi, Kenya",
   contact: "Phone: 0795344905 | Email: info@neurotriq.co.ke",
   kraPin: "P052459770V",
 };

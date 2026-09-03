@@ -70,7 +70,7 @@ const Footer = () => {
               </div>
               <div className="flex items-center space-x-3">
                 <MapPin className="h-4 w-4 text-primary" />
-                <span className="text-muted-foreground">Kins Arcade, Ground Floor, ongata rongai</span>
+                <span className="text-muted-foreground">Intrade Africa Place, Lavington</span>
               </div>
               <div className="flex items-center space-x-3">
                 <MapPin className="h-4 w-4 text-primary" />

@@ -132,7 +132,6 @@ const Contact = () => {
       icon: <MapPin className="h-6 w-6 text-primary" />,
       title: "Address",
       details: [
-        "Kins Arcade, Ground Floor, ongata rongai",
         "Intrade Africa Place, Lavington",
         "P.O. Box 4983-00100 Nairobi, Kenya"
       ],
@@ -156,14 +155,6 @@ const Contact = () => {
   ];
 
   const officeLocations = [
-    {
-      name: "Kins Arcade Office",
-      address: "Kins Arcade, Ground Floor, ongata rongai",
-      postal: "P.O. Box 4983-00100 Nairobi, Kenya",
-      phone: "0795344905",
-      email: "info@neurotriq.co.ke",
-      hours: "Mon-Fri: 8AM-6PM"
-    },
     {
       name: "Intrade Africa Place Office",
       address: "Intrade Africa Place, Lavington",
