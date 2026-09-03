@@ -57,9 +57,9 @@ const Portfolio = () => {
   const testimonials = [
     {
       name: "Operations Lead",
-      title: "Kamo Ventures Limited",
-      company: "Kamo Ventures",
-      quote: "Your team handled the KenGen security deployment professionally — from solar CCTV to video wall integration. Training and support were on point.",
+      title: "Consolata International University",
+      company: "Consolata International University",
+      quote: "Your team handled the security deployment professionally — from solar CCTV to video wall integration. Training and support were on point.",
       rating: 5,
     },
     {

@@ -32,18 +32,18 @@ export const categories: PortfolioCategoryName[] = [
 
 // Real projects provided by the user
 export const projects: Project[] = [
-  // Feature case study first: Kamo Ventures (Security)
+  // Feature case study first: Consolata International University (Security)
   {
     id: 1,
-    title: "Kamo Ventures Limited — KenGen IP IoT Security Deployment",
+    title: "Consolata International University IP IoT Security Deployment",
     category: "Security",
-    client: "Kamo Ventures Limited (Subcontract at KenGen)",
+    client: "Consolata International University (Contract)",
     location: "Kenya",
     duration: "Ongoing",
     teamSize: "Field engineers & trainers",
     image: cctvCamera3,
     description:
-      "Installation and commissioning of IP IoT security systems for KenGen including solar-powered CCTV and video walls, with on-site technical personnel and support.",
+      "Installation and commissioning of IP IoT security systems for Consolata International University including solar-powered CCTV and video walls, with on-site technical personnel and support.",
     challenges: [
       "Harsh outdoor environments for solar CCTV",
       "Complex integration with video walls",
@@ -68,9 +68,9 @@ export const projects: Project[] = [
   // Security
   {
     id: 2,
-    title: "Laverda Company Limited — KenGen 1AU Unit 6",
+    title: "Juliet Farms",
     category: "Security",
-    client: "Laverda Company Limited (Subcontract)",
+    client: "Juliet Farms (Subcontract)",
     location: "Kenya",
     duration: "Project-based",
     teamSize: "Security engineers",
