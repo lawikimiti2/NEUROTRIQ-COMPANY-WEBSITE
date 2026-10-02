@@ -756,7 +756,14 @@ app.get("/api/admin/documents/:id/pdf", jwtAuth, async (req, res) => {
     const lineGap = isReceipt ? 11 : 14;
     if (record.clientEmail) { y += lineGap; doc.text(record.clientEmail, margin, y); }
     if (record.clientPhone) { y += lineGap; doc.text(record.clientPhone, margin, y); }
-    if (record.clientAddress) { y += lineGap; doc.text(record.clientAddress, margin, y, { width: contentWidth * 0.7 }); }
+    if (record.clientAddress) {
+      y += lineGap;
+      const addressWidth = contentWidth * 0.7;
+      doc.text(record.clientAddress, margin, y, { width: addressWidth });
+      // A wrapped (multi-line) address needs more than one lineGap before
+      // the table below it, or the table header would overlap its tail.
+      y += Math.max(0, doc.heightOfString(record.clientAddress, { width: addressWidth }) - lineGap);
+    }
 
     // Line items table — column widths are proportions of content width so
     // they scale correctly between A4 and A5.
@@ -781,8 +788,14 @@ app.get("/api/admin/documents/:id/pdf", jwtAuth, async (req, res) => {
 
     doc.font("Helvetica").fontSize(fontSize);
     const rowHeight = isReceipt ? 15 : 18;
+    const rowPadding = isReceipt ? 4 : 6;
     record.lineItems.forEach((item) => {
-      if (y > doc.page.height - (isReceipt ? 90 : 150)) {
+      // A long description wraps onto multiple lines within its column, so
+      // the row's actual height can't be the fixed single-line rowHeight —
+      // measure it, or the next row silently overlaps the wrapped tail.
+      const descHeight = doc.heightOfString(item.description, { width: cols[0].width });
+      const thisRowHeight = Math.max(rowHeight, descHeight + rowPadding);
+      if (y + thisRowHeight > doc.page.height - (isReceipt ? 90 : 150)) {
         doc.addPage();
         y = margin;
       }
@@ -791,24 +804,40 @@ app.get("/api/admin/documents/:id/pdf", jwtAuth, async (req, res) => {
       doc.text(String(item.quantity), cols[1].x, y, { width: cols[1].width, align: "right" });
       doc.text(item.unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2 }), cols[2].x, y, { width: cols[2].width, align: "right" });
       doc.text(amount.toLocaleString(undefined, { minimumFractionDigits: 2 }), cols[3].x, y, { width: cols[3].width, align: "right" });
-      y += rowHeight;
+      y += thisRowHeight;
     });
 
     y += isReceipt ? 6 : 10;
-    const totalsLabelX = margin + contentWidth * 0.55;
+    // Widened from the content area's right 45% to its right 58% — the
+    // previous split left too little room for the value column once large
+    // KES totals (6-7 figures) were formatted in, forcing them to wrap and
+    // spill out below the fixed-height TOTAL band.
+    const totalsLabelX = margin + contentWidth * 0.42;
+    const totalsAreaWidth = rightEdge - totalsLabelX;
     doc.moveTo(totalsLabelX, y).lineTo(rightEdge, y).stroke();
     y += isReceipt ? 6 : 10;
 
     const totalsRow = (label, value, bold = false) => {
       const size = bold ? fontSize + 2 : fontSize + 1;
-      const rowH = bold ? (isReceipt ? 18 : 22) : (isReceipt ? 13 : 16);
+      doc.font(bold ? "Helvetica-Bold" : "Helvetica").fontSize(size);
+      const valueText = `KES ${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+      // Size the label column to its own text instead of a fixed 55/45
+      // split, so the value column — which has to fit the widest, boldest
+      // number on the page — gets whatever room is left over.
+      const labelWidth = Math.min(totalsAreaWidth * 0.5, doc.widthOfString(label) + 10);
+      const valueWidth = totalsAreaWidth - labelWidth;
+      const minRowH = bold ? (isReceipt ? 18 : 22) : (isReceipt ? 13 : 16);
+      // Measure the value's actual rendered height at this width as a
+      // safety net: even if it still wraps (an extreme total), the band
+      // and row advance grow to match instead of clipping/overlapping.
+      const valueHeight = doc.heightOfString(valueText, { width: valueWidth, align: "right" });
+      const rowH = Math.max(minRowH, valueHeight + 8);
       if (bold) {
-        doc.rect(totalsLabelX - 8, y - 4, rightEdge - totalsLabelX + 8, rowH).fill(themeColor);
+        doc.rect(totalsLabelX - 8, y - 4, totalsAreaWidth + 8, rowH).fill(themeColor);
         doc.fillColor("white");
       }
-      doc.font(bold ? "Helvetica-Bold" : "Helvetica").fontSize(size);
-      doc.text(label, totalsLabelX, y, { width: (rightEdge - totalsLabelX) * 0.55, align: "right" });
-      doc.text(`KES ${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, totalsLabelX + (rightEdge - totalsLabelX) * 0.55, y, { width: (rightEdge - totalsLabelX) * 0.45, align: "right" });
+      doc.text(label, totalsLabelX, y, { width: labelWidth, align: "right" });
+      doc.text(valueText, totalsLabelX + labelWidth, y, { width: valueWidth, align: "right" });
       if (bold) doc.fillColor("black");
       y += rowH;
     };
@@ -820,7 +849,12 @@ app.get("/api/admin/documents/:id/pdf", jwtAuth, async (req, res) => {
       y += isReceipt ? 12 : 20;
       doc.font("Helvetica-Bold").fontSize(fontSize + 1).text("Notes", margin, y);
       y += isReceipt ? 11 : 15;
-      doc.font("Helvetica").fontSize(fontSize).text(record.notes, margin, y, { width: contentWidth });
+      doc.font("Helvetica").fontSize(fontSize);
+      doc.text(record.notes, margin, y, { width: contentWidth });
+      // Advance by the notes' actual (possibly multi-line) height, not a
+      // fixed offset, or "Thank you for your business" below can overlap
+      // wrapped notes text.
+      y += doc.heightOfString(record.notes, { width: contentWidth });
     }
 
     // Positioned relative to where the content actually ended, rather than
