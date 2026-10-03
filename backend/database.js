@@ -51,6 +51,7 @@ db.prepare(`
     type TEXT NOT NULL CHECK(type IN ('quote','invoice','receipt')),
     number TEXT NOT NULL UNIQUE,
     status TEXT NOT NULL DEFAULT 'open',
+    title TEXT,
     clientName TEXT NOT NULL,
     clientEmail TEXT,
     clientPhone TEXT,
@@ -82,6 +83,9 @@ if (!documentColumns.some((c) => c.name === "color")) {
 }
 if (!documentColumns.some((c) => c.name === "backgroundColor")) {
   db.prepare("ALTER TABLE documents ADD COLUMN backgroundColor TEXT NOT NULL DEFAULT '#ffffff'").run();
+}
+if (!documentColumns.some((c) => c.name === "title")) {
+  db.prepare("ALTER TABLE documents ADD COLUMN title TEXT").run();
 }
 
 export default db;

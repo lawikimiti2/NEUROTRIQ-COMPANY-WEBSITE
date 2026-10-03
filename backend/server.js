@@ -65,7 +65,7 @@ const DEFAULT_BACKGROUND_COLOR = "#ffffff";
 // not present in `body`, so a partial PATCH doesn't wipe unrelated fields.
 function buildDocumentFields(body, existing = null) {
   const merged = existing ? { ...existing, ...body } : body;
-  const { type, clientName, clientEmail, clientPhone, clientAddress,
+  const { type, title, clientName, clientEmail, clientPhone, clientAddress,
     issueDate, dueDate, validUntil, paymentMethod, relatedInvoiceNumber,
     lineItems, taxRate, notes, color, backgroundColor } = merged;
 
@@ -97,6 +97,7 @@ function buildDocumentFields(body, existing = null) {
   return {
     fields: {
       type,
+      title: clean(title) || null,
       clientName: clean(clientName),
       clientEmail: clean(clientEmail) || null,
       clientPhone: clean(clientPhone) || null,
@@ -513,15 +514,16 @@ app.post("/api/admin/documents", jwtAuth, (req, res) => {
     const number = generateDocumentNumber(fields.type);
     const stmt = db.prepare(`
       INSERT INTO documents (
-        type, number, status, clientName, clientEmail, clientPhone, clientAddress,
+        type, number, status, title, clientName, clientEmail, clientPhone, clientAddress,
         issueDate, dueDate, validUntil, paymentMethod, relatedInvoiceNumber,
         lineItems, subtotal, taxRate, taxAmount, total, notes, color, backgroundColor
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     const result = stmt.run(
       fields.type,
       number,
       "open",
+      fields.title,
       fields.clientName,
       fields.clientEmail,
       fields.clientPhone,
@@ -605,7 +607,7 @@ app.patch("/api/admin/documents/:id", jwtAuth, (req, res) => {
 
     db.prepare(`
       UPDATE documents SET
-        type = ?, status = ?, clientName = ?, clientEmail = ?, clientPhone = ?,
+        type = ?, status = ?, title = ?, clientName = ?, clientEmail = ?, clientPhone = ?,
         clientAddress = ?, issueDate = ?, dueDate = ?, validUntil = ?,
         paymentMethod = ?, relatedInvoiceNumber = ?, lineItems = ?, subtotal = ?,
         taxRate = ?, taxAmount = ?, total = ?, notes = ?, color = ?, backgroundColor = ?
@@ -613,6 +615,7 @@ app.patch("/api/admin/documents/:id", jwtAuth, (req, res) => {
     `).run(
       fields.type,
       nextStatus,
+      fields.title,
       fields.clientName,
       fields.clientEmail,
       fields.clientPhone,
@@ -727,6 +730,13 @@ app.get("/api/admin/documents/:id/pdf", jwtAuth, async (req, res) => {
       .text(DOCUMENT_LABELS[record.type], margin + 10, y, { width: contentWidth - 20 });
     doc.fillColor("black");
     y += titleBandHeight + (isReceipt ? 8 : 10);
+
+    if (record.title) {
+      const titleFontSize = isReceipt ? 10 : 12;
+      doc.font("Helvetica-Bold").fontSize(titleFontSize).text(record.title, margin, y, { width: contentWidth });
+      y += doc.heightOfString(record.title, { width: contentWidth }) + (isReceipt ? 8 : 10);
+    }
+
     doc.font("Helvetica").fontSize(isReceipt ? 8 : 10).text(`#${record.number}`, margin, y);
     doc.text(`Status: ${record.status.toUpperCase()}`, margin, y, { width: contentWidth, align: "right" });
 

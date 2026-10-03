@@ -56,6 +56,7 @@ const AdminDocumentForm = () => {
   const [loading, setLoading] = useState(isEditMode);
 
   const [type, setType] = useState<DocumentType>("quote");
+  const [title, setTitle] = useState("");
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [clientPhone, setClientPhone] = useState("");
@@ -90,6 +91,7 @@ const AdminDocumentForm = () => {
         const data = await res.json();
         const doc = data.document;
         setType(doc.type);
+        setTitle(doc.title || "");
         setClientName(doc.clientName || "");
         setClientEmail(doc.clientEmail || "");
         setClientPhone(doc.clientPhone || "");
@@ -161,6 +163,7 @@ const AdminDocumentForm = () => {
     try {
       const payload = {
         type,
+        title: title || undefined,
         clientName,
         clientEmail: clientEmail || undefined,
         clientPhone: clientPhone || undefined,
@@ -249,6 +252,17 @@ const AdminDocumentForm = () => {
                       <SelectItem value="receipt">Receipt</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
+                    className="mt-1.5"
+                    placeholder="Optional — shown below the document heading"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
