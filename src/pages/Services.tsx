@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/ui/footer";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, cloneElement } from "react";
 import { 
   Cpu, 
   Shield, 
@@ -25,6 +25,14 @@ import {
   FileText
 } from "lucide-react";
 import { categoryImages } from "@/lib/categoryImages";
+import Reveal from "@/components/ui/reveal";
+import PageTransition from "@/components/ui/page-transition";
+import { motion } from "framer-motion";
+
+const EYEBROW =
+  "mb-4 rounded-full border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary";
+const EYEBROW_ON_DARK =
+  "mb-4 rounded-full border-white/25 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-white backdrop-blur-sm";
 
 // Images now load per category folder dynamically on each card using import.meta.glob
 
@@ -259,22 +267,45 @@ const Services = () => {
   };
 
   return (
+    <PageTransition>
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      {/* Hero Section */}
-      <section className="pt-24 pb-16 bg-gradient-to-br from-primary/10 to-steel-blue/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <Badge variant="outline" className="mb-4">Our Services</Badge>
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              Comprehensive Technology
-              <span className="gradient-text block">Solutions</span>
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              From IT infrastructure to smart building technologies, we provide end-to-end 
-              solutions that transform your business operations and enhance security.
-            </p>
+      {/* Hero Section — two-column with a bento grid previewing all six
+          services, instead of Home's photo or About's stat strip. */}
+      <section className="relative overflow-hidden pt-28 pb-16 md:pt-32 md:pb-20 bg-background">
+        <div className="pointer-events-none absolute -left-24 top-24 h-[28rem] w-[28rem] rounded-full bg-primary/10 blur-3xl" aria-hidden="true"></div>
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div className="animate-fade-in-up text-center lg:text-left">
+              <Badge variant="outline" className={EYEBROW}>Our Services</Badge>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 tracking-tight">
+                Comprehensive Technology
+                <span className="gradient-text block mt-2">Solutions</span>
+              </h1>
+              <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-xl mx-auto lg:mx-0">
+                From IT infrastructure to smart building technologies, we provide end-to-end
+                solutions that transform your business operations and enhance security.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              {mainServices.map((service, index) => (
+                <motion.div
+                  key={service.id}
+                  initial={{ opacity: 0, scale: 0.85 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.4, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                  className="group flex flex-col items-center justify-center gap-2 aspect-square rounded-2xl bg-card shadow-card hover:shadow-tech hover:-translate-y-1 transition-all duration-300 p-3 text-center"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
+                    {cloneElement(service.icon, { className: "h-5 w-5" })}
+                  </div>
+                  <span className="text-xs font-medium leading-tight">{service.title}</span>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -284,7 +315,8 @@ const Services = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
             {mainServices.map((service, index) => (
-              <Card key={index} className="group hover:shadow-tech transition-all duration-300 border-0 shadow-card">
+              <Reveal key={index} delay={(index % 3) * 0.1}>
+              <Card className="group hover:shadow-tech transition-all duration-300 border-0 shadow-card">
                 <div className="relative overflow-hidden rounded-t-lg h-48">
                   {(() => {
                     const images = getImagesForService(service.id);
@@ -322,6 +354,7 @@ const Services = () => {
                   </Link>
                 </CardContent>
               </Card>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -329,8 +362,9 @@ const Services = () => {
 
       {/* Detailed Services */}
       <section className="py-20 bg-muted/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
+            <Badge variant="outline" className={EYEBROW}>In Depth</Badge>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Service Details</h2>
             <p className="text-xl text-muted-foreground">
               Explore our comprehensive range of technology solutions and their benefits.
@@ -406,14 +440,14 @@ const Services = () => {
               </TabsContent>
             ))}
           </Tabs>
-        </div>
+        </Reveal>
       </section>
 
       {/* Process Section */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <Badge variant="outline" className="mb-4">Our Process</Badge>
+            <Badge variant="outline" className={EYEBROW}>Our Process</Badge>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">How We Work</h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
               Our proven methodology ensures successful project delivery from start to finish.
@@ -422,7 +456,8 @@ const Services = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {processSteps.map((step, index) => (
-              <Card key={index} className="border-0 shadow-card text-center relative">
+              <Reveal key={index} delay={index * 0.1}>
+              <Card className="border-0 shadow-card text-center relative">
                 <CardHeader>
                   <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
                     <span className="text-primary-foreground font-bold text-lg">{step.step}</span>
@@ -438,6 +473,7 @@ const Services = () => {
                   </div>
                 )}
               </Card>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -447,14 +483,14 @@ const Services = () => {
       <section className="py-20 bg-muted/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <Badge variant="outline" className="mb-4">Technologies</Badge>
+            <Badge variant="outline" className={EYEBROW}>Technologies</Badge>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Cutting-Edge Solutions</h2>
             <p className="text-xl text-muted-foreground">
               We work with the latest technologies and industry-leading brands.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
+          <Reveal className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
             {[
               { icon: <Monitor className="h-8 w-8" />, name: "Network Infrastructure" },
               { icon: <Cloud className="h-8 w-8" />, name: "Cloud Solutions" },
@@ -472,38 +508,40 @@ const Services = () => {
                 <p className="text-sm font-medium text-muted-foreground">{tech.name}</p>
               </div>
             ))}
-          </div>
+          </Reveal>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-primary text-primary-foreground">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section className="py-20 bg-navy text-white">
+        <Reveal className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <Badge variant="outline" className={EYEBROW_ON_DARK}>Get Started</Badge>
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Ready to Transform Your Technology Infrastructure?
           </h2>
-          <p className="text-xl opacity-90 mb-8">
+          <p className="text-xl text-white/70 mb-8">
             Contact our experts today for a free consultation and custom quote.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a href="tel:+254795344905">
-              <Button size="lg" variant="secondary" className="text-lg px-8 py-4">
+              <Button size="lg" className="rounded-full text-lg px-8 py-4 bg-mint text-mint-foreground hover:bg-mint/90">
                 <Phone className="mr-2 h-5 w-5" />
                 Call for Quote
               </Button>
             </a>
             <a href="mailto:info@neurotriq.co.ke">
-              <Button size="lg" variant="outline" className="text-lg px-8 py-4 bg-transparent border-white text-white hover:bg-white hover:text-foreground">
+              <Button size="lg" variant="outline" className="rounded-full text-lg px-8 py-4 bg-transparent border-white/60 text-white hover:bg-white hover:text-foreground">
                 <Mail className="mr-2 h-5 w-5" />
                 Email Consultation
               </Button>
             </a>
           </div>
-        </div>
+        </Reveal>
       </section>
 
       <Footer />
     </div>
+    </PageTransition>
   );
 };
 

@@ -8,55 +8,73 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
+    /* Design system rebuilt to match berxley.com's visual language: a
+       vivid indigo-blue primary, a deep navy for dark bands, a sparing mint
+       accent for secondary CTAs/checkmarks, and cool blue-grey neutrals
+       instead of warm greys — in place of the old NeuroTriq tech-blue set. */
     --background: 0 0% 100%;
-    --foreground: 220 15% 20%;
+    --foreground: 228 24% 16%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 15% 20%;
+    --card-foreground: 228 24% 16%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 20%;
+    --popover-foreground: 228 24% 16%;
 
-    /* NeuroTriq Blue Palette */
-    --primary: 214 84% 56%;
+    /* Primary — vivid indigo-blue */
+    --primary: 227 85% 60%;
     --primary-foreground: 0 0% 100%;
-    --primary-light: 214 84% 70%;
-    --primary-dark: 214 84% 42%;
+    --primary-light: 227 85% 72%;
+    --primary-dark: 227 70% 45%;
 
-    /* Professional Greys */
-    --secondary: 220 13% 91%;
-    --secondary-foreground: 220 15% 25%;
+    /* Cool blue-grey neutrals (not warm greys) */
+    --secondary: 227 25% 93%;
+    --secondary-foreground: 228 20% 25%;
 
-    --muted: 220 13% 95%;
-    --muted-foreground: 220 10% 35%;
+    --muted: 227 35% 96%;
+    --muted-foreground: 225 15% 42%;
 
-    --accent: 214 32% 91%;
-    --accent-foreground: 214 84% 25%;
+    --accent: 227 70% 95%;
+    --accent-foreground: 227 70% 35%;
 
-    /* Tech-inspired colors */
-    --tech-blue: 214 84% 56%;
-    --tech-blue-light: 214 84% 70%;
-    --tech-blue-dark: 214 84% 42%;
-    --tech-grey: 220 13% 91%;
-    --tech-grey-dark: 220 15% 25%;
-    --steel-blue: 214 32% 91%;
+    /* Tech-inspired colors (kept for backward compatibility with existing
+       classes; aliased to the new primary/navy values) */
+    --tech-blue: 227 85% 60%;
+    --tech-blue-light: 227 85% 72%;
+    --tech-blue-dark: 227 70% 45%;
+    --tech-grey: 227 25% 93%;
+    --tech-grey-dark: 231 40% 22%;
+    --steel-blue: 227 70% 95%;
+
+    /* Navy — full-bleed dark bands, footer accents */
+    --navy: 231 48% 18%;
+    --navy-light: 231 38% 28%;
+
+    /* Mint — a sparing secondary accent, used the way berxley.com uses its
+       green: one standout button, checkmarks, the occasional highlight.
+       Never the dominant colour. */
+    --mint: 160 64% 42%;
+    --mint-foreground: 0 0% 100%;
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(214 84% 56%), hsl(214 84% 42%));
-    --gradient-hero: linear-gradient(135deg, hsl(214 84% 56%) 0%, hsl(214 84% 42%) 50%, hsl(220 15% 25%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(220 13% 97%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(227 85% 60%), hsl(227 70% 45%));
+    --gradient-hero: linear-gradient(135deg, hsl(227 85% 60%) 0%, hsl(227 70% 45%) 50%, hsl(231 48% 18%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(227 35% 97%) 100%);
 
-    /* Professional shadows */
-    --shadow-tech: 0 10px 40px -10px hsl(214 84% 56% / 0.2);
-    --shadow-card: 0 4px 20px -4px hsl(220 15% 25% / 0.1);
-    --shadow-hero: 0 20px 60px -10px hsl(214 84% 56% / 0.3);
+    /* Shadows */
+    --shadow-tech: 0 10px 40px -10px hsl(227 85% 60% / 0.2);
+    /* Layered: a tight, slightly-defined edge plus a soft ambient spread —
+       enough presence for a borderless card to read clearly against a
+       white page, without a hard outline. */
+    --shadow-card: 0 1px 2px hsl(228 24% 16% / 0.06), 0 12px 28px -10px hsl(228 24% 16% / 0.16);
+    --shadow-hero: 0 20px 60px -10px hsl(227 85% 60% / 0.3);
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 214 84% 56%;
+    --border: 227 25% 90%;
+    --input: 227 25% 90%;
+    --ring: 227 85% 60%;
 
     --radius: 0.75rem;
 
@@ -220,12 +238,10 @@ All colors MUST be HSL.
   animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Gradient text effect */
+/* Highlighted-word treatment for headlines — a flat primary colour, matching
+   berxley.com's style (e.g. "Welcome to Berxley.") rather than a gradient. */
 .gradient-text {
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: hsl(var(--primary));
 }
 
 /* Tech grid pattern with 3D mesh effect */

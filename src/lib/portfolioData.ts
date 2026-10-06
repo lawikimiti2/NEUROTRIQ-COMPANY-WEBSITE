@@ -35,7 +35,7 @@ export const projects: Project[] = [
   // Feature case study first: Consolata International University (Security)
   {
     id: 1,
-    title: "Consolata International University IP IoT Security Deployment",
+    title: "Consolata International University",
     category: "Security",
     client: "Consolata International University (Contract)",
     location: "Kenya",

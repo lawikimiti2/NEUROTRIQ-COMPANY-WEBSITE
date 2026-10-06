@@ -1,16 +1,22 @@
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/ui/footer";
-import { Building2, Handshake, Award, Globe, CheckCircle, ArrowRight } from "lucide-react";
+import { Building2, Handshake, Award, Globe, ArrowRight } from "lucide-react";
 import { getPartnerLogos } from "@/lib/partnerLogos";
 import hikvisionVisitPhoto from "@/assets/new-photos/photo-at-HKVision-headquarters.jpg";
 import "./Partners.css";
-import { useEffect, useMemo, useRef, useState } from "react";
-// Removed carousel arrows in favor of continuous marquee scroll
-import { Tabs, TabsContent } from "@/components/ui/tabs";
+import Reveal from "@/components/ui/reveal";
+import PageTransition from "@/components/ui/page-transition";
+import { motion } from "framer-motion";
 import "./partners-3d.css";
+
+const EYEBROW =
+  "mb-4 rounded-full border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary";
+const EYEBROW_ON_DARK =
+  "mb-4 rounded-full border-white/25 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-white backdrop-blur-sm";
 
 const Partners = () => {
   const partners = [
@@ -96,27 +102,66 @@ const Partners = () => {
       null
     );
   };
-  const paused = useRef(false);
-  
+
 
   return (
+    <PageTransition>
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      {/* Hero Section */}
-      <section className="pt-24 pb-16 bg-gradient-to-br from-primary/10 to-steel-blue/10 relative overflow-hidden">
-        <div className="absolute inset-0 tech-grid opacity-30"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center">
-            <Badge variant="outline" className="mb-4">Our Partners</Badge>
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              Trusted Global
-              <span className="gradient-text block">Technology Partners</span>
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              We collaborate with world-leading technology brands to deliver cutting-edge solutions 
-              and ensure the highest quality standards for our clients.
-            </p>
+      {/* Hero Section — a radial cluster of real partner-logo badges
+          floating around a handshake icon, a fifth distinct composition
+          tying directly into what this page is about. */}
+      <section className="relative overflow-hidden pt-28 pb-16 md:pt-32 md:pb-20 bg-background">
+        <div className="pointer-events-none absolute -right-24 top-24 h-[28rem] w-[28rem] rounded-full bg-primary/10 blur-3xl" aria-hidden="true"></div>
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div className="animate-fade-in-up text-center lg:text-left">
+              <Badge variant="outline" className={EYEBROW}>Our Partners</Badge>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 tracking-tight">
+                Trusted Global
+                <span className="gradient-text block mt-2">Technology Partners</span>
+              </h1>
+              <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-xl mx-auto lg:mx-0">
+                We collaborate with world-leading technology brands to deliver cutting-edge solutions
+                and ensure the highest quality standards for our clients.
+              </p>
+            </div>
+
+            <div className="relative mx-auto w-full max-w-sm aspect-square hidden sm:block">
+              <div className="absolute inset-0 rounded-full border-2 border-dashed border-primary/25"></div>
+              <div className="absolute inset-10 rounded-full bg-primary/5 blur-2xl" aria-hidden="true"></div>
+
+              <div className="absolute inset-[22%] rounded-full bg-card shadow-hero flex items-center justify-center">
+                <Handshake className="h-14 w-14 text-primary" />
+              </div>
+
+              {partners.slice(0, 5).map((partner, index) => {
+                const logo = findLogo(partner.name);
+                const positions = [
+                  "top-0 left-1/2 -translate-x-1/2",
+                  "top-[18%] -right-2",
+                  "bottom-[10%] -right-4",
+                  "bottom-0 left-1/4",
+                  "top-[20%] -left-4",
+                ];
+                return (
+                  <motion.div
+                    key={partner.name}
+                    animate={{ y: [0, -8, 0] }}
+                    transition={{ duration: 3 + index * 0.4, repeat: Infinity, ease: "easeInOut", delay: index * 0.3 }}
+                    className={`absolute ${positions[index]} w-16 h-16 rounded-2xl bg-card shadow-tech flex items-center justify-center p-2.5`}
+                  >
+                    {logo ? (
+                      <img src={logo.src} alt={partner.name} className="max-w-full max-h-full object-contain" />
+                    ) : (
+                      <Building2 className="h-6 w-6 text-primary" />
+                    )}
+                  </motion.div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
@@ -131,7 +176,8 @@ const Partners = () => {
               { icon: <Globe className="h-8 w-8 text-primary" />, title: "Global Support", desc: "Worldwide backed services" },
               { icon: <Building2 className="h-8 w-8 text-primary" />, title: "Enterprise Grade", desc: "Professional solutions" }
             ].map((benefit, index) => (
-              <Card key={index} className="border-0 shadow-card text-center hover:shadow-tech transition-all duration-300">
+              <Reveal key={index} delay={index * 0.1}>
+              <Card className="border-0 shadow-card text-center hover:shadow-tech transition-all duration-300">
                 <CardContent className="pt-6">
                   <div className="mx-auto mb-4 inline-block p-3 bg-primary/10 rounded-full">
                     {benefit.icon}
@@ -140,6 +186,7 @@ const Partners = () => {
                   <p className="text-sm text-muted-foreground">{benefit.desc}</p>
                 </CardContent>
               </Card>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -149,7 +196,7 @@ const Partners = () => {
       <section className="py-12 bg-muted/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-6">
-            <Badge variant="outline" className="mb-2">Our Partners</Badge>
+            <Badge variant="outline" className={EYEBROW}>Our Partners</Badge>
             <h3 className="text-xl md:text-2xl font-semibold">Brands We Work With</h3>
           </div>
 
@@ -179,10 +226,10 @@ const Partners = () => {
 
       {/* Real Partnership - Site Visit */}
       <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="order-2 lg:order-1">
-              <Badge variant="outline" className="mb-4">Beyond the Logo</Badge>
+              <Badge variant="outline" className={EYEBROW}>Beyond the Logo</Badge>
               <h2 className="text-3xl md:text-4xl font-bold mb-6">
                 Real Relationships, Not Just Badges
               </h2>
@@ -201,107 +248,60 @@ const Partners = () => {
               <img
                 src={hikvisionVisitPhoto}
                 alt="NeuroTriQ team visiting Hikvision's Nairobi office"
-                className="rounded-2xl shadow-tech w-full h-auto object-cover"
+                className="rounded-2xl shadow-tech w-full aspect-[4/3] object-cover"
                 loading="lazy"
                 decoding="async"
               />
             </div>
           </div>
-        </div>
+        </Reveal>
       </section>
 
-      {/* Partners Details - Tabs with logos as triggers */}
+      {/* Partners Details — a continuous horizontal marquee of partner
+          cards, replacing the old one-at-a-time auto-advancing tab. */}
       <section className="py-20 bg-muted/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <Badge variant="outline" className="mb-4">Technology Leaders</Badge>
+          <Reveal className="text-center mb-10">
+            <Badge variant="outline" className={EYEBROW}>Technology Leaders</Badge>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Our Strategic Partners</h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
               Explore details for each partner and how we work together.
             </p>
-          </div>
+          </Reveal>
+        </div>
 
-          {(() => {
-            const items = partners.map((p) => ({ ...p, logo: findLogo(p.name) }));
-            const [activeTab, setActiveTab] = useState(0);
-
-            // Auto-advance partner tabs every few seconds, pausing on hover/focus
-            useEffect(() => {
-              const id = window.setInterval(() => {
-                if (!paused.current) {
-                  setActiveTab((prev) => (prev + 1) % items.length);
-                }
-              }, 4000);
-              return () => window.clearInterval(id);
-            }, [items.length]);
-
-            return (
-              <div
-                onMouseEnter={() => (paused.current = true)}
-                onMouseLeave={() => (paused.current = false)}
-                onFocus={() => (paused.current = true)}
-                onBlur={() => (paused.current = false)}
-              >
-                <Tabs value={`p-${activeTab}`} onValueChange={(v) => setActiveTab(Number(v.replace('p-','')))}>
-                  {/* Tab triggers removed per request to hide the selector strip; navigation handled by dots below */}
-                  {items.map((p, idx) => (
-                    <TabsContent key={p.name} value={`p-${idx}`} className="mt-4">
-                      <div className="partner-card" role="group" aria-labelledby={`partner-${idx}`}>
-                        <div className="partner-card-inner partner-card-content" tabIndex={0}>
-                          <Card className="border-0 shadow-none">
-                            <CardHeader className="py-4">
-                              <div className="flex items-center gap-3">
-                                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                                  {p.logo ? (
-                                    <img src={p.logo.src} alt={`${p.name} logo`} className="max-h-12 max-w-[90%] object-contain" />
-                                  ) : (
-                                    <Building2 className="h-8 w-8 text-primary" />
-                                  )}
-                                </div>
-                                <div>
-                                  <CardTitle id={`partner-${idx}`} className="text-lg leading-tight">{p.name}</CardTitle>
-                                  <Badge variant="secondary" className="text-[10px] mt-1">{p.category}</Badge>
-                                </div>
-                              </div>
-                            </CardHeader>
-                            <CardContent className="space-y-3 pb-5">
-                              <p className="text-sm text-muted-foreground leading-relaxed">{p.description}</p>
-                              <div className="pt-3 border-t">
-                                <p className="text-xs font-medium text-primary">Specialization</p>
-                                <p className="text-xs text-muted-foreground mt-1">{p.specialization}</p>
-                              </div>
-                              <div className="pt-2">
-                                <p className="text-xs font-medium text-foreground mb-2">Key Benefits</p>
-                                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                                  {p.benefits.map((benefit, i) => (
-                                    <li key={i} className="flex items-start gap-2">
-                                      <CheckCircle className="h-3.5 w-3.5 text-primary mt-0.5" />
-                                      <span className="text-xs text-muted-foreground">{benefit}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        </div>
+        <div className="marquee marquee--cards" tabIndex={0} aria-label="Partner details, auto-scrolling">
+          <div className="marquee__track marquee__track--cards">
+            {[...partners, ...partners].map((p, idx) => {
+              const logo = findLogo(p.name);
+              return (
+                <div key={idx} className="marquee__item marquee__item--card">
+                  <div className="h-full rounded-2xl bg-card shadow-card p-6 flex flex-col">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center shrink-0">
+                        {logo ? (
+                          <img src={logo.src} alt={`${p.name} logo`} className="max-h-10 max-w-[85%] object-contain" />
+                        ) : (
+                          <Building2 className="h-6 w-6 text-primary" />
+                        )}
                       </div>
-                    </TabsContent>
-                  ))}
-                </Tabs>
-
-                <div className="flex items-center justify-center gap-2 mt-4">
-                  {partners.map((_, i) => (
-                    <button
-                      key={i}
-                      aria-label={`Show ${partners[i].name}`}
-                      onClick={() => setActiveTab(i)}
-                      className={`w-2.5 h-2.5 rounded-full transition-all ${i === activeTab ? 'bg-primary scale-110' : 'bg-muted'}`}
-                    />
-                  ))}
+                      <div>
+                        <h3 className="font-semibold leading-tight">{p.name}</h3>
+                        <Badge variant="secondary" className="text-[10px] mt-1">{p.category}</Badge>
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3 mb-4">
+                      {p.description}
+                    </p>
+                    <div className="mt-auto pt-4 border-t border-border">
+                      <p className="text-xs font-medium text-primary mb-1">Specialization</p>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{p.specialization}</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            );
-          })()}
+              );
+            })}
+          </div>
         </div>
       </section>
 
@@ -309,6 +309,7 @@ const Partners = () => {
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
+            <Badge variant="outline" className={EYEBROW}>Value</Badge>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Why Our Partnerships Matter</h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
               Our strategic partnerships ensure you receive the best technology solutions with comprehensive support.
@@ -330,7 +331,8 @@ const Partners = () => {
                 description: "Early access to new technologies and product releases for competitive advantage"
               }
             ].map((item, index) => (
-              <Card key={index} className="border-0 shadow-card hover:shadow-tech transition-all duration-300">
+              <Reveal key={index} delay={index * 0.1}>
+              <Card className="border-0 shadow-card hover:shadow-tech transition-all duration-300">
                 <CardHeader>
                   <CardTitle className="text-xl">{item.title}</CardTitle>
                 </CardHeader>
@@ -338,30 +340,34 @@ const Partners = () => {
                   <p className="text-muted-foreground leading-relaxed">{item.description}</p>
                 </CardContent>
               </Card>
+              </Reveal>
             ))}
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-primary text-primary-foreground relative overflow-hidden">
-        <div className="absolute inset-0 tech-grid opacity-20"></div>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+      <section className="py-20 bg-navy text-white relative overflow-hidden">
+        <Reveal className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+          <Badge variant="outline" className={EYEBROW_ON_DARK}>Work With Us</Badge>
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Experience Premium Technology Solutions
           </h2>
-          <p className="text-xl opacity-90 mb-8">
+          <p className="text-xl text-white/70 mb-8">
             Benefit from our partnerships with world-leading technology brands.
           </p>
-          <Button size="lg" variant="secondary" className="text-lg px-8 py-4">
-            Contact Us Today
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </Button>
-        </div>
+          <Link to="/contact#get-in-touch">
+            <Button size="lg" className="rounded-full text-lg px-8 py-4 bg-mint text-mint-foreground hover:bg-mint/90">
+              Contact Us Today
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </Link>
+        </Reveal>
       </section>
 
       <Footer />
     </div>
+    </PageTransition>
   );
 };
 

@@ -555,7 +555,7 @@ const ServiceDetail = () => {
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 pt-8">
-                <Link to="/contact" className="flex-1">
+                <Link to="/contact#get-in-touch" className="flex-1">
                   <Button size="lg" className="w-full btn-tech">
                     <Calendar className="mr-2 h-5 w-5" />
                     Schedule Consultation
@@ -594,7 +594,7 @@ const ServiceDetail = () => {
                   <p className="mb-6 opacity-90">
                     Get a free consultation with our technical experts to discuss your specific requirements.
                   </p>
-                  <Link to="/contact">
+                  <Link to="/contact#get-in-touch">
                     <Button variant="secondary" className="w-full">
                       Contact Us Now
                     </Button>

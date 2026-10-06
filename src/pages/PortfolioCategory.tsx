@@ -40,7 +40,7 @@ const PortfolioCategory = () => {
                 <CardContent>
                   <p className="text-muted-foreground mb-4">{p.description}</p>
                   <Button asChild>
-                    <a href="/contact">Contact about this project</a>
+                    <a href="/contact#get-in-touch">Contact about this project</a>
                   </Button>
                 </CardContent>
               </Card>

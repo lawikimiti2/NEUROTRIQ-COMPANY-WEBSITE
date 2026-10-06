@@ -77,6 +77,14 @@ export default {
 					dark: 'hsl(var(--tech-grey-dark))'
 				},
 				'steel-blue': 'hsl(var(--steel-blue))',
+				navy: {
+					DEFAULT: 'hsl(var(--navy))',
+					light: 'hsl(var(--navy-light))'
+				},
+				mint: {
+					DEFAULT: 'hsl(var(--mint))',
+					foreground: 'hsl(var(--mint-foreground))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -92,6 +100,11 @@ export default {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
+			},
+			boxShadow: {
+				card: 'var(--shadow-card)',
+				tech: 'var(--shadow-tech)',
+				hero: 'var(--shadow-hero)'
 			},
 			keyframes: {
 				'accordion-down': {

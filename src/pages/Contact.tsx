@@ -11,6 +11,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/ui/footer";
 import { useToast } from "@/hooks/use-toast";
+import Reveal from "@/components/ui/reveal";
+import PageTransition from "@/components/ui/page-transition";
+
+const EYEBROW =
+  "mb-4 rounded-full border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary";
+const EYEBROW_ON_DARK =
+  "mb-4 rounded-full border-white/25 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-white backdrop-blur-sm";
 import { 
   MapPin, 
   Phone, 
@@ -64,6 +71,19 @@ const Contact = () => {
   // run on first mount only for prefill
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Scroll to the form when arriving with a #get-in-touch hash (every
+  // "Contact"/"Get Quote" link site-wide points here now) — React Router
+  // doesn't auto-scroll to hash targets on a client-side route change the
+  // way a plain browser navigation would.
+  useEffect(() => {
+    if (location.hash === "#get-in-touch") {
+      const el = document.getElementById("get-in-touch");
+      if (el) {
+        requestAnimationFrame(() => el.scrollIntoView({ behavior: "smooth", block: "start" }));
+      }
+    }
+  }, [location.hash]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,41 +174,83 @@ const Contact = () => {
     { value: "consultation", label: "General Consultation", icon: <MessageSquare className="h-4 w-4" /> }
   ];
 
-  const officeLocations = [
-    {
-      name: "Intrade Africa Place Office",
-      address: "Intrade Africa Place, Lavington",
-      postal: "P.O. Box 4983-00100 Nairobi, Kenya",
-      phone: "0795344905",
-      email: "info@neurotriq.co.ke",
-      hours: "Mon-Fri: 8AM-6PM"
-    }
-  ];
+  const officeLocation = {
+    name: "Intrade Africa Place Office",
+    address: "Intrade Africa Place, Lavington",
+    postal: "P.O. Box 4983-00100 Nairobi, Kenya",
+    phone: "0795344905",
+    email: "info@neurotriq.co.ke",
+    hours: "Mon-Fri: 8AM-6PM"
+  };
 
   return (
+    <PageTransition>
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      {/* Hero Section */}
-      <section className="pt-24 pb-16 bg-gradient-to-br from-primary/10 to-steel-blue/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <Badge variant="outline" className="mb-4">Contact Us</Badge>
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
+      {/* Hero Section — centered text with inline, clickable quick-contact
+          chips instead of a photo or stats, since getting in touch fast is
+          the whole point of this page. */}
+      <section className="relative overflow-hidden pt-28 pb-8 md:pt-32 md:pb-10 bg-background">
+        <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 -top-24 h-[32rem] w-[32rem] rounded-full bg-primary/10 blur-3xl" aria-hidden="true"></div>
+
+        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="animate-fade-in-up">
+            <Badge variant="outline" className={EYEBROW}>Contact Us</Badge>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 tracking-tight">
               Let's Build Something
-              <span className="gradient-text block">Amazing Together</span>
+              <span className="gradient-text block mt-2">Amazing Together</span>
             </h1>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              Ready to transform your technology infrastructure? Get in touch with our experts 
+            <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-10">
+              Ready to transform your technology infrastructure? Get in touch with our experts
               for a free consultation and custom solution proposal.
             </p>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <a
+              href="tel:+254795344905"
+              className="group flex items-center gap-3 rounded-2xl bg-card shadow-card hover:shadow-tech hover:-translate-y-1 transition-all duration-300 px-5 py-4"
+            >
+              <span className="w-10 h-10 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
+                <Phone className="h-5 w-5" />
+              </span>
+              <span className="text-left">
+                <span className="block text-sm font-semibold">Call Us</span>
+                <span className="block text-xs text-muted-foreground">0795344905</span>
+              </span>
+            </a>
+            <a
+              href="mailto:info@neurotriq.co.ke"
+              className="group flex items-center gap-3 rounded-2xl bg-card shadow-card hover:shadow-tech hover:-translate-y-1 transition-all duration-300 px-5 py-4"
+            >
+              <span className="w-10 h-10 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
+                <Mail className="h-5 w-5" />
+              </span>
+              <span className="text-left">
+                <span className="block text-sm font-semibold">Email Us</span>
+                <span className="block text-xs text-muted-foreground">info@neurotriq.co.ke</span>
+              </span>
+            </a>
+            <div className="flex items-center gap-3 rounded-2xl bg-card shadow-card px-5 py-4">
+              <span className="w-10 h-10 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                <MapPin className="h-5 w-5" />
+              </span>
+              <span className="text-left">
+                <span className="block text-sm font-semibold">Visit Us</span>
+                <span className="block text-xs text-muted-foreground">Intrade Africa Place, Lavington</span>
+              </span>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Contact Form & Info */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="get-in-touch" className="pt-4 pb-20 scroll-mt-24">
+        <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <Badge variant="outline" className={EYEBROW}>Get In Touch</Badge>
+          </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             {/* Contact Form */}
             <div className="lg:col-span-2">
@@ -328,7 +390,7 @@ const Contact = () => {
                       </Label>
                     </div>
 
-                    <Button type="submit" size="lg" className="btn-tech w-full" disabled={isSubmitting}>
+                    <Button type="submit" size="lg" className="btn-tech rounded-full w-full" disabled={isSubmitting}>
                       {isSubmitting ? (
                         <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                       ) : (
@@ -399,7 +461,7 @@ const Contact = () => {
                     Book a free 30-minute consultation with our experts.
                   </p>
                   <a href="tel:+254795344905">
-                    <Button variant="outline" size="sm" className="w-full">
+                    <Button variant="outline" size="sm" className="w-full rounded-full">
                       Book Appointment
                     </Button>
                   </a>
@@ -407,91 +469,87 @@ const Contact = () => {
               </Card>
             </div>
           </div>
-        </div>
+        </Reveal>
       </section>
 
-      {/* Office Locations */}
+      {/* Our Location — a single wide card instead of a half-empty grid,
+          since there's just the one office. */}
       <section className="py-20 bg-muted/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <Badge variant="outline" className="mb-4">Our Locations</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Visit Our Offices</h2>
+            <Badge variant="outline" className={EYEBROW}>Our Location</Badge>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Visit Our Office</h2>
             <p className="text-xl text-muted-foreground">
               Conveniently located to serve your technology needs.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {officeLocations.map((location, index) => (
-              <Card key={index} className="border-0 shadow-card">
-                <CardContent className="p-6">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Building className="h-6 w-6 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold text-lg mb-2">{location.name}</h3>
-                      <div className="space-y-2 text-sm text-muted-foreground">
-                        <div className="flex items-center space-x-2">
-                          <MapPin className="h-4 w-4" />
-                          <span>{location.address}</span>
-                        </div>
-                        { (location as any).postal && (
-                          <div className="flex items-center space-x-2">
-                            <MapPin className="h-4 w-4" />
-                            <span>{(location as any).postal}</span>
-                          </div>
-                        )}
-                        <div className="flex items-center space-x-2">
-                          <Phone className="h-4 w-4" />
-                          <span>{location.phone}</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Mail className="h-4 w-4" />
-                          <span>{location.email}</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Clock className="h-4 w-4" />
-                          <span>{location.hours}</span>
-                        </div>
-                      </div>
+          <Reveal className="max-w-3xl mx-auto">
+            <div className="rounded-3xl bg-card shadow-hero p-8 sm:p-10">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                  <Building className="h-7 w-7" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold leading-tight">{officeLocation.name}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {officeLocation.address} · {officeLocation.postal}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 border-t border-border">
+                {[
+                  { icon: <Phone className="h-4 w-4" />, label: "Phone", value: officeLocation.phone },
+                  { icon: <Mail className="h-4 w-4" />, label: "Email", value: officeLocation.email },
+                  { icon: <Clock className="h-4 w-4" />, label: "Hours", value: officeLocation.hours },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <span className="w-9 h-9 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                      {item.icon}
+                    </span>
+                    <div>
+                      <p className="text-xs text-muted-foreground">{item.label}</p>
+                      <p className="text-sm font-medium">{item.value}</p>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                ))}
+              </div>
+            </div>
+          </Reveal>
         </div>
       </section>
 
       {/* Emergency Contact */}
-      <section className="py-20 bg-primary text-primary-foreground">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section className="py-20 bg-navy text-white">
+        <Reveal className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <Badge variant="outline" className={EYEBROW_ON_DARK}>24/7 Response</Badge>
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Need Emergency Support?
           </h2>
-          <p className="text-xl opacity-90 mb-8">
+          <p className="text-xl text-white/70 mb-8">
             Our emergency response team is available 24/7 for critical technology issues.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a href="tel:+254795344905">
-              <Button size="lg" variant="secondary" className="text-lg px-8 py-4">
+              <Button size="lg" className="rounded-full text-lg px-8 py-4 bg-mint text-mint-foreground hover:bg-mint/90">
                 <Phone className="mr-2 h-5 w-5" />
                 Call Emergency Line
               </Button>
             </a>
             <a href="mailto:info@neurotriq.co.ke">
-              <Button size="lg" variant="outline" className="text-lg px-8 py-4 bg-transparent border-white text-white hover:bg-white hover:text-foreground">
+              <Button size="lg" variant="outline" className="rounded-full text-lg px-8 py-4 bg-transparent border-white/60 text-white hover:bg-white hover:text-foreground">
                 <MessageSquare className="mr-2 h-5 w-5" />
                 Email Support
               </Button>
             </a>
           </div>
-        </div>
+        </Reveal>
       </section>
 
       <Footer />
     </div>
+    </PageTransition>
   );
 };
 

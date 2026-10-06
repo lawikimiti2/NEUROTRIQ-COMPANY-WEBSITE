@@ -63,3 +63,21 @@
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
+
+/* Wider variant for the partner-details marquee: slower (more to read),
+   items wrap text normally instead of the logo row's nowrap, and stretch
+   to equal height so every card's bottom border lines up. */
+.marquee--cards {
+  --marquee-speed: 55s;
+}
+
+.marquee__track--cards {
+  white-space: normal;
+  align-items: stretch;
+  gap: 1.25rem;
+  padding: 0.5rem 0 1.5rem;
+}
+
+.marquee__item--card {
+  width: clamp(280px, 26vw, 340px);
+}

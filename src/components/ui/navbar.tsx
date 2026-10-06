@@ -14,10 +14,10 @@ const Navbar = () => {
     { name: "Services", path: "/services" },
     { name: "Portfolio", path: "/portfolio" },
     { name: "Partners", path: "/partners" },
-    { name: "Contact", path: "/contact" },
+    { name: "Contact", path: "/contact#get-in-touch" },
   ];
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => location.pathname === path.split("#")[0];
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
@@ -47,7 +47,7 @@ const Navbar = () => {
                 {item.name}
               </Link>
             ))}
-            <Link to="/contact">
+            <Link to="/contact#get-in-touch">
               <Button variant="default" size="sm" className="btn-tech">
                 Get Quote
               </Button>
@@ -84,7 +84,7 @@ const Navbar = () => {
               </Link>
             ))}
             <div className="px-3 py-2">
-              <Link to="/contact" className="block">
+              <Link to="/contact#get-in-touch" className="block">
                 <Button variant="default" size="sm" className="btn-tech w-full">
                   Get Quote
                 </Button>
