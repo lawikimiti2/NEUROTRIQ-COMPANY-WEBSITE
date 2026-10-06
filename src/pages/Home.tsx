@@ -25,10 +25,33 @@ import {
   Network,
   Briefcase
 } from "lucide-react";
-import heroCameraPhoto from "@/assets/new-photos/our-projects-cctv-camera-5.jpg";
 import cameraInstallPhoto from "@/assets/new-photos/our-projects-cctv-camera-1.jpg";
 import Reveal from "@/components/ui/reveal";
 import PageTransition from "@/components/ui/page-transition";
+import HeroSlider from "@/components/ui/hero-slider";
+
+// A curated subset of the Security Systems photo gallery (ServiceDetail.tsx's
+// securityImages), cycled through the hero circle. Many of the full gallery's
+// shots are flat product boards or have an off-centre subject that crops
+// awkwardly into a circle — these are the ones with a clear, centred focal
+// point that actually survives the crop.
+import secHeroCctv2 from "@/assets/new-photos/our-projects-cctv-camera-2.jpg";
+import secHeroDisplayWall from "@/assets/new-photos/our-projects-cctv-camera-display-screen.jpg";
+import secHeroCctv5 from "@/assets/new-photos/our-projects-cctv-camera-5.jpg";
+import secHeroImg1 from "@/assets/SECURITY SOLUTIONS/IMG-20251028-WA0007.jpg";
+import secHeroImg4 from "@/assets/SECURITY SOLUTIONS/IMG-20251028-WA0010.jpg";
+import secHeroImg7 from "@/assets/SECURITY SOLUTIONS/IMG-20251028-WA0013.jpg";
+import secHeroImg13 from "@/assets/SECURITY SOLUTIONS/IMG-20251028-WA0019.jpg";
+
+const heroSlides = [
+  { src: secHeroCctv2, alt: "Hikvision bullet camera mounted on-site" },
+  { src: secHeroDisplayWall, alt: "16-camera CCTV monitoring wall at a client site" },
+  { src: secHeroCctv5, alt: "NeuroTriQ-installed Hikvision CCTV camera, on-site" },
+  { src: secHeroImg1, alt: "Close-up dome camera for Smart Retail security" },
+  { src: secHeroImg4, alt: "AI-powered security camera and smart access kiosk" },
+  { src: secHeroImg7, alt: "Hikvision Safe City camera solutions on display" },
+  { src: secHeroImg13, alt: "Industrial-grade camera lineup for critical infrastructure" },
+];
 
 // Small uppercase pill label used above section headings throughout this page.
 const EYEBROW =
@@ -155,11 +178,7 @@ const Home = () => {
               <div className="absolute inset-6 rounded-full bg-primary/5 blur-2xl" aria-hidden="true"></div>
 
               <div className="absolute inset-[12%] rounded-full overflow-hidden shadow-hero border-4 border-background">
-                <img
-                  src={heroCameraPhoto}
-                  alt="NeuroTriQ-installed Hikvision CCTV camera, on-site"
-                  className="w-full h-full object-cover"
-                />
+                <HeroSlider slides={heroSlides} />
               </div>
 
               {/* Orbiting service-icon chips, gently floating */}
