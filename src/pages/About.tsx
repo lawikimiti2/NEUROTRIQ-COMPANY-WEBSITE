@@ -125,9 +125,12 @@ const About = () => {
         </div>
       </section>
 
-      {/* Company Story Section */}
+      {/* Company Story Section — sits right under the hero, so it should
+          already be visible on arrival instead of waiting for a scroll-
+          triggered reveal (no Reveal wrapper here, unlike sections further
+          down the page). */}
       <section className="py-20">
-        <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl md:text-4xl font-bold mb-6">Our Story</h2>
@@ -171,7 +174,7 @@ const About = () => {
               </div>
             </div>
           </div>
-        </Reveal>
+        </div>
       </section>
 
       {/* Mission & Vision Section */}

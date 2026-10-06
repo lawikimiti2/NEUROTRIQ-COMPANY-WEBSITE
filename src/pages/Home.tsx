@@ -234,23 +234,23 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Stats Section — no section-level background at all; the individual
-          stat cards carry their own definition instead of a band. */}
+      {/* Stats Section — sits right under the hero, so it should already be
+          visible on arrival instead of waiting for a scroll-triggered
+          reveal. No section-level background either; the individual stat
+          cards carry their own definition instead of a band. */}
       <section className="pt-16 pb-8 md:pt-20 md:pb-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
             {stats.map((stat, index) => (
-              <Reveal key={index} delay={index * 0.1}>
-                <div className="flex items-center gap-4 rounded-2xl bg-card shadow-card hover:shadow-tech hover:-translate-y-1 transition-all duration-300 px-5 py-5">
-                  <div className="w-12 h-12 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                    {stat.icon}
-                  </div>
-                  <div>
-                    <div className="text-2xl md:text-3xl font-bold leading-none tracking-tight text-foreground">{stat.value}</div>
-                    <div className="text-xs md:text-sm text-muted-foreground mt-1">{stat.label}</div>
-                  </div>
+              <div key={index} className="flex items-center gap-4 rounded-2xl bg-card shadow-card hover:shadow-tech hover:-translate-y-1 transition-all duration-300 px-5 py-5">
+                <div className="w-12 h-12 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                  {stat.icon}
                 </div>
-              </Reveal>
+                <div>
+                  <div className="text-2xl md:text-3xl font-bold leading-none tracking-tight text-foreground">{stat.value}</div>
+                  <div className="text-xs md:text-sm text-muted-foreground mt-1">{stat.label}</div>
+                </div>
+              </div>
             ))}
           </div>
         </div>

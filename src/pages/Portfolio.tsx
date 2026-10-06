@@ -143,16 +143,18 @@ const Portfolio = () => {
         </div>
       </section>
 
-      {/* Project Stats */}
+      {/* Project Stats — sits right under the hero, so it should already be
+          visible on arrival instead of waiting for a scroll-triggered
+          reveal (no Reveal wrapper here, unlike sections further down). */}
   <section className="relative z-10 px-4 sm:px-6 lg:px-8 pb-4">
-        <Reveal className="max-w-5xl mx-auto bg-card rounded-2xl shadow-hero grid grid-cols-2 md:grid-cols-3 divide-x divide-y md:divide-y-0 divide-border/60">
+        <div className="max-w-5xl mx-auto bg-card rounded-2xl shadow-hero grid grid-cols-2 md:grid-cols-3 divide-x divide-y md:divide-y-0 divide-border/60">
           {projectStats.map((stat, index) => (
             <div key={index} className="text-center py-8 px-4">
               <div className="text-3xl md:text-4xl font-semibold text-primary mb-1">{stat.value}</div>
               <div className="text-sm text-muted-foreground">{stat.label}</div>
             </div>
           ))}
-        </Reveal>
+        </div>
       </section>
 
       {/* Featured Projects */}
