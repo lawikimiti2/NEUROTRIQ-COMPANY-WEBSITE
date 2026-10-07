@@ -152,7 +152,7 @@ const Contact = () => {
       icon: <MapPin className="h-6 w-6 text-primary" />,
       title: "Address",
       details: [
-        "Intrade Africa Place, Lavington",
+        "Liteprice Plaza, Sheikh Karume Rd",
         "P.O. Box 4983-00100 Nairobi, Kenya"
       ],
       description: ""
@@ -175,8 +175,8 @@ const Contact = () => {
   ];
 
   const officeLocation = {
-    name: "Intrade Africa Place Office",
-    address: "Intrade Africa Place, Lavington",
+    name: "Liteprice Plaza Office",
+    address: "Liteprice Plaza, Sheikh Karume Rd",
     postal: "P.O. Box 4983-00100 Nairobi, Kenya",
     phone: "0795344905",
     email: "info@neurotriq.co.ke",
@@ -238,7 +238,7 @@ const Contact = () => {
               </span>
               <span className="text-left">
                 <span className="block text-sm font-semibold">Visit Us</span>
-                <span className="block text-xs text-muted-foreground">Intrade Africa Place, Lavington</span>
+                <span className="block text-xs text-muted-foreground">Liteprice Plaza, Sheikh Karume Rd</span>
               </span>
             </div>
           </div>

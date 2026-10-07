@@ -114,7 +114,7 @@ const Footer = () => {
                   <MapPin className="h-3.5 w-3.5" />
                 </span>
                 <span className="text-muted-foreground pt-1.5">
-                  Intrade Africa Place, Lavington
+                  Liteprice Plaza, Sheikh Karume Rd
                   <br />
                   P.O. Box 4983-00100 Nairobi, Kenya
                 </span>
