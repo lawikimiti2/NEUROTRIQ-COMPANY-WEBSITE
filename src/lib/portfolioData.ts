@@ -105,18 +105,6 @@ export const projects: Project[] = [
       "Support on tendering, EGP, licensing, and business administration to streamline compliance and bidding success.",
   },
   {
-    id: 5,
-    title: "Kamo Ventures Limited — Security & IT Tendering",
-    category: "Consultancy",
-    client: "Kamo Ventures Limited",
-    location: "Kenya",
-    duration: "Consulting",
-    teamSize: "Advisory team",
-    image: "",
-    description:
-      "Consultancy for tendering across general security and IT projects, aligning documentation and compliance for bids.",
-  },
-  {
     id: 6,
     title: "Universal Systems Engineering Limited — EGP Registration",
     category: "Consultancy",
@@ -131,16 +119,28 @@ export const projects: Project[] = [
 
   // IT
   {
-    id: 7,
-    title: "Laverda Technologies — IT Support & Infrastructure",
+    id: 5,
+    title: "Tripple Facility — Programming CISCO Switches",
     category: "IT",
-    client: "Laverda Technologies",
+    client: "Tripple Facility",
+    location: "Kenya",
+    duration: "Project-based",
+    teamSize: "Network engineers",
+    image: "",
+    description:
+      "Programming and configuration of CISCO switches to support a reliable, secure network infrastructure.",
+  },
+  {
+    id: 7,
+    title: "Neuroq Hub — Networking Tasks",
+    category: "IT",
+    client: "Neuroq Hub",
     location: "Kenya",
     duration: "Ongoing",
     teamSize: "IT engineers",
     image: voipPhone1,
     description:
-      "Implementation and support for core IT infrastructure, including network and systems optimization.",
+      "Networking tasks including infrastructure setup, configuration, and ongoing network support.",
   },
   {
     id: 8,
