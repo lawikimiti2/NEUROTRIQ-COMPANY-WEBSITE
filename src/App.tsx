@@ -17,6 +17,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminDocuments from "./pages/AdminDocuments";
 import AdminDocumentForm from "./pages/AdminDocumentForm";
 import VerifyDocument from "./pages/VerifyDocument";
+import VerifyBrand from "./pages/VerifyBrand";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ const App = () => (
           <Route path="/admin/documents" element={<AdminDocuments />} />
           <Route path="/admin/documents/new" element={<AdminDocumentForm />} />
           <Route path="/admin/documents/:id/edit" element={<AdminDocumentForm />} />
+          <Route path="/verify" element={<VerifyBrand />} />
           <Route path="/verify/:number" element={<VerifyDocument />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
