@@ -1,8 +1,9 @@
-import cctvCamera1 from "@/assets/new-photos/our-projects-cctv-camera-1.jpg";
 import cctvCamera3 from "@/assets/new-photos/our-projects-cctv-camera-3.jpg";
-import doorLockBiometric from "@/assets/new-photos/our-projects-security-door-lock-biometric.jpg";
-import voipPhone1 from "@/assets/new-photos/our-projects-VOIP-phone-1.jpg";
-import voipPhone2 from "@/assets/new-photos/our-projects-VOIP-phone-2.jpg";
+import julietFarmsSolarCamera from "@/assets/new-photos/our-projects-solar-cctv-pole-closeup.jpg";
+import ipTrainingVmsSetup from "@/assets/new-photos/our-projects-ip-training-vms-setup.jpg";
+import ciscoSwitchRack from "@/assets/new-photos/our-projects-cisco-switch-rack-fiber-patch.jpg";
+import itNetworkCabinet from "@/assets/new-photos/our-projects-it-network-cabinet-wall-mounted-1.jpg";
+import smartHomeDemo from "@/assets/new-photos/our-projects-smart-home-robot-vacuum-demo.jpg";
 
 export type PortfolioCategoryName = "Consultancy" | "IT" | "Security" | "Smart Building";
 
@@ -74,7 +75,7 @@ export const projects: Project[] = [
     location: "Kenya",
     duration: "Project-based",
     teamSize: "Security engineers",
-    image: cctvCamera1,
+    image: julietFarmsSolarCamera,
     description:
       "CCTV installation, switch configurations, and video wall setup with technical personnel and ongoing support.",
   },
@@ -86,7 +87,7 @@ export const projects: Project[] = [
     location: "Kenya",
     duration: "Workshops",
     teamSize: "Trainers & support staff",
-    image: doorLockBiometric,
+    image: ipTrainingVmsSetup,
     description:
       "Design and deployment of IoT security systems complemented by structured training on modern IP-based surveillance platforms.",
   },
@@ -132,13 +133,13 @@ export const projects: Project[] = [
   },
   {
     id: 7,
-    title: "Neuroq Hub — Networking Tasks",
+    title: "Neurok Hub — Networking Tasks",
     category: "IT",
-    client: "Neuroq Hub",
+    client: "Neurok Hub",
     location: "Kenya",
     duration: "Ongoing",
     teamSize: "IT engineers",
-    image: voipPhone1,
+    image: ciscoSwitchRack,
     description:
       "Networking tasks including infrastructure setup, configuration, and ongoing network support.",
   },
@@ -150,7 +151,7 @@ export const projects: Project[] = [
     location: "Kenya",
     duration: "Ongoing",
     teamSize: "IT engineers",
-    image: voipPhone2,
+    image: itNetworkCabinet,
     description:
       "Business IT setup and ongoing support to ensure secure connectivity and reliable operations.",
   },
@@ -164,7 +165,7 @@ export const projects: Project[] = [
     location: "Nakuru, Kenya",
     duration: "Project-based",
     teamSize: "Construction & smart home team",
-    image: "",
+    image: smartHomeDemo,
     description:
       "Combined residential construction and smart home project delivered in Nakuru — integrated systems for comfort, security, and efficiency.",
   },
